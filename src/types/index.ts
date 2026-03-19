@@ -40,13 +40,22 @@ export interface Address {
   country: string;
 }
 
+export interface OrderItem {
+  id: number;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  size?: ProductSize;
+  price: number;
+}
+
 export interface Order {
   id: string;
-  userId: string;
-  items: CartItem[];
+  userId?: string;
+  items: OrderItem[];
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  shippingAddress: Address;
+  shippingAddress: any;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product, ProductSize } from '../types/index';
-import { getProductById } from '../data/products';
+import { api } from '../services/api';
+import Loading from '../components/common/Loading';
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,23 +15,43 @@ const ProductPage: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showAddedNotification, setShowAddedNotification] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const foundProduct = getProductById(id);
-      if (foundProduct) {
-        setProduct(foundProduct);
-        if (foundProduct.sizes && foundProduct.sizes.length > 0) {
-          setSelectedSize(foundProduct.sizes[1]?.size || foundProduct.sizes[0].size);
+    const fetchProduct = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await api.products.getById(id);
+        setProduct(data);
+        
+        if (data.sizes && data.sizes.length > 0) {
+          setSelectedSize(data.sizes[1]?.size || data.sizes[0].size);
         }
+      } catch (err) {
+        console.error('Failed to fetch product:', err);
+        setError('Не удалось загрузить товар');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchProduct();
   }, [id]);
 
-  if (!product) {
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error || !product) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Товар не найден</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          {error || 'Товар не найден'}
+        </h1>
         <Link 
           to="/catalog" 
           className="inline-block bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"

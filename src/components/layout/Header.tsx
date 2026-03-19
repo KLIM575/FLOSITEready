@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const navigate = useNavigate();
   const { getItemCount } = useCart();
+  const { user, isAdmin, login, register, logout } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,14 +93,40 @@ const Header: React.FC = () => {
               )}
             </Link>
 
-            <Link 
-              to="/profile" 
-              className="hidden md:block p-2 text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </Link>
+            {user ? (
+              <div className="hidden md:flex items-center gap-4">
+                {isAdmin && (
+                  <Link 
+                    to="/admin" 
+                    className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                  >
+                    Админ
+                  </Link>
+                )}
+                <Link 
+                  to="/profile" 
+                  className="p-2 text-gray-700 hover:text-primary-600 transition-colors"
+                  title={user.name}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </Link>
+                <button
+                  onClick={logout}
+                  className="text-sm text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                >
+                  Выход
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="hidden md:block text-gray-700 hover:text-primary-600 transition-colors font-medium"
+              >
+                Вход
+              </button>
+            )}
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -155,7 +185,138 @@ const Header: React.FC = () => {
           </div>
         )}
       </div>
+
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {authMode === 'login' ? 'Вход' : 'Регистрация'}
+              </h2>
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <AuthForm
+              mode={authMode}
+              onSuccess={() => setShowAuthModal(false)}
+              onSwitchMode={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+            />
+          </div>
+        </div>
+      )}
     </header>
+  );
+};
+
+interface AuthFormProps {
+  mode: 'login' | 'register';
+  onSuccess: () => void;
+  onSwitchMode: () => void;
+}
+
+const AuthForm: React.FC<AuthFormProps> = ({ mode, onSuccess, onSwitchMode }) => {
+  const { login, register } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: '',
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      if (mode === 'login') {
+        await login(formData.email, formData.password);
+      } else {
+        await register(formData.email, formData.password, formData.name);
+      }
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-800 text-sm">
+          {error}
+        </div>
+      )}
+
+      {mode === 'register' && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Имя
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-900 mb-2">
+          Email
+        </label>
+        <input
+          type="email"
+          required
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-900 mb-2">
+          Пароль
+        </label>
+        <input
+          type="password"
+          required
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isSubmitting ? 'Загрузка...' : (mode === 'login' ? 'Войти' : 'Зарегистрироваться')}
+      </button>
+
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={onSwitchMode}
+          className="text-sm text-primary-600 hover:text-primary-700"
+        >
+          {mode === 'login' ? 'Нет аккаунта? Зарегистрируйтесь' : 'Уже есть аккаунт? Войдите'}
+        </button>
+      </div>
+    </form>
   );
 };
 

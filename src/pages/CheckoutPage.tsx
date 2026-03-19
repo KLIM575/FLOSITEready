@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 interface ShippingInfo {
   name: string;
@@ -15,6 +17,7 @@ interface ShippingInfo {
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   
   const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
@@ -26,6 +29,9 @@ const CheckoutPage: React.FC = () => {
     postalCode: '',
     comment: ''
   });
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const totalPrice = getTotalPrice();
   const deliveryFee = totalPrice >= 5000 ? 0 : 500;
@@ -36,12 +42,43 @@ const CheckoutPage: React.FC = () => {
     setStep('payment');
   };
 
-  const handlePaymentComplete = () => {
-    setStep('success');
-    setTimeout(() => {
-      clearCart();
-      navigate('/');
-    }, 5000);
+  const handlePaymentComplete = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      const orderData = {
+        items: items.map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          size: item.size
+        })),
+        shipping_address: {
+          name: shippingInfo.name,
+          phone: shippingInfo.phone,
+          email: shippingInfo.email,
+          city: shippingInfo.city,
+          postal_code: shippingInfo.postalCode,
+          address: shippingInfo.address,
+          comment: shippingInfo.comment
+        },
+        user_id: user?.id
+      };
+      
+      const order = await api.orders.create(orderData);
+      setOrderId(order.id);
+      setStep('success');
+      
+      setTimeout(() => {
+        clearCart();
+        navigate('/');
+      }, 5000);
+    } catch (err) {
+      console.error('Failed to create order:', err);
+      setSubmitError('Не удалось создать заказ. Попробуйте еще раз.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (items.length === 0 && step !== 'success') {
@@ -77,6 +114,9 @@ const CheckoutPage: React.FC = () => {
               </svg>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Заказ оформлен!</h1>
+            {orderId && (
+              <p className="text-sm text-gray-500 mb-2">Номер заказа: {orderId}</p>
+            )}
             <p className="text-xl text-gray-600 mb-2">Спасибо за покупку</p>
             <p className="text-gray-600 mb-8">
               Мы отправили подтверждение на {shippingInfo.email}
@@ -357,12 +397,19 @@ const CheckoutPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {submitError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                      {submitError}
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={handlePaymentComplete}
-                    className="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-green-700 transition-all shadow-lg hover:shadow-xl"
+                    disabled={isSubmitting}
+                    className="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-green-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Оплата прошла успешно
+                    {isSubmitting ? 'Обработка заказа...' : 'Оплата прошла успешно'}
                   </button>
 
                   <p className="text-xs text-center text-gray-500">
