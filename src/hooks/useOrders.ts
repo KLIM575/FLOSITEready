@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Order } from '../types';
+import type { Order } from '../types/index.js';
 import { api } from '../services/api';
 
 export const useOrders = (userId?: string) => {

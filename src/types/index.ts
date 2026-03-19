@@ -1,9 +1,18 @@
+export type ProductSize = 'S' | 'M' | 'L' | 'XL';
+
+export interface ProductSizePrice {
+  size: ProductSize;
+  price: number;
+}
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
+  sizes?: ProductSizePrice[];
   image: string;
+  images?: string[];
   category: string;
   inStock: boolean;
   quantity?: number;
@@ -12,6 +21,7 @@ export interface Product {
 export interface CartItem {
   product: Product;
   quantity: number;
+  size?: ProductSize;
 }
 
 export interface User {
