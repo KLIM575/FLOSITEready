@@ -36,7 +36,7 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
             "id": order_id,
             "user_id": order.user_id,
             "total_amount": total_amount,
-            "status": "pending",
+            "status": "PENDING",
             "created_at": now,
             "updated_at": now
         }
@@ -99,7 +99,7 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
         "id": order_id,
         "user_id": order.user_id,
         "total_amount": total_amount,
-        "status": "pending",
+        "status": "PENDING",
         "created_at": now.isoformat(),
         "updated_at": now.isoformat(),
         "items": items_data,
@@ -125,6 +125,22 @@ def _serialize_order_dict(db: Session, db_order: models.Order) -> dict:
         models.ShippingAddress.order_id == db_order.id
     ).first()
     
+    serialized_items = []
+    for item in items:
+        product = db.query(models.Product).filter(
+            models.Product.id == item.product_id
+        ).first()
+        serialized_items.append({
+            "id": item.id,
+            "order_id": item.order_id,
+            "product_id": item.product_id,
+            "product_name": product.name if product else item.product_id,
+            "product_image": product.image if product else None,
+            "quantity": item.quantity,
+            "size": item.size.value if item.size else None,
+            "price": item.price
+        })
+    
     return {
         "id": db_order.id,
         "user_id": db_order.user_id,
@@ -132,17 +148,7 @@ def _serialize_order_dict(db: Session, db_order: models.Order) -> dict:
         "status": db_order.status.value,
         "created_at": db_order.created_at.isoformat(),
         "updated_at": db_order.updated_at.isoformat(),
-        "items": [
-            {
-                "id": item.id,
-                "order_id": item.order_id,
-                "product_id": item.product_id,
-                "quantity": item.quantity,
-                "size": item.size.value if item.size else None,
-                "price": item.price
-            }
-            for item in items
-        ],
+        "items": serialized_items,
         "shipping_address": {
             "id": shipping.id,
             "order_id": shipping.order_id,
@@ -173,12 +179,18 @@ def get_order_by_id(db: Session, order_id: str) -> Optional[dict]:
 def update_order_status(
     db: Session, 
     order_id: str, 
-    status: models.OrderStatus
+    status
 ) -> Optional[dict]:
     db_order = db.query(models.Order).filter(models.Order.id == order_id).first()
     if not db_order:
         return None
     
-    db_order.status = status
+    status_value = status.value if hasattr(status, 'value') else str(status)
+    status_upper = status_value.upper()
+    db.execute(
+        text("UPDATE orders SET status = :status, updated_at = :updated_at WHERE id = :id"),
+        {"status": status_upper, "updated_at": datetime.utcnow(), "id": order_id}
+    )
     db.commit()
+    db.refresh(db_order)
     return _serialize_order_dict(db, db_order)
