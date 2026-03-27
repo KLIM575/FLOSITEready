@@ -1,6 +1,13 @@
 import React from 'react';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 
 const ContactsPage: React.FC = () => {
+  const { settings } = useSiteSettings();
+
+  const phone = settings.contactPhone || '+7 (900) 123-45-67';
+  const email = settings.contactEmail || 'info@flowershop.ru';
+  const address = settings.contactAddress || 'г. Москва, ул. Цветочная, 15';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white py-16 px-4">
       <div className="max-w-4xl mx-auto">
@@ -21,24 +28,24 @@ const ContactsPage: React.FC = () => {
                 </svg>
                 <div>
                   <div className="font-semibold text-gray-900">Телефон</div>
-                  <a href="tel:+79001234567" className="text-primary-600 hover:text-primary-700">
-                    +7 (900) 123-45-67
+                  <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-primary-600 hover:text-primary-700">
+                    {phone}
                   </a>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <svg className="w-6 h-6 text-primary-600 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <div>
                   <div className="font-semibold text-gray-900">Email</div>
-                  <a href="mailto:info@flowershop.ru" className="text-primary-600 hover:text-primary-700">
-                    info@flowershop.ru
+                  <a href={`mailto:${email}`} className="text-primary-600 hover:text-primary-700">
+                    {email}
                   </a>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <svg className="w-6 h-6 text-primary-600 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -46,7 +53,7 @@ const ContactsPage: React.FC = () => {
                 </svg>
                 <div>
                   <div className="font-semibold text-gray-900">Адрес</div>
-                  <div className="text-gray-600">г. Москва, ул. Цветочная, 15</div>
+                  <div className="text-gray-600">{address}</div>
                 </div>
               </div>
               

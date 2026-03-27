@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,6 +12,10 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const { getItemCount } = useCart();
   const { user, isAdmin, login, register, logout } = useAuth();
+  const { settings } = useSiteSettings();
+
+  const shopName = settings.shopName || 'Flower Shop';
+  const shopTagline = settings.shopTagline || 'Магазин цветов';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,8 +31,8 @@ const Header: React.FC = () => {
           <Link to="/" className="flex items-center space-x-2 group">
             <span className="text-4xl group-hover:scale-110 transition-transform">🌸</span>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-gray-900 font-serif">Flower Shop</span>
-              <span className="text-xs text-gray-500 -mt-1">Магазин цветов</span>
+              <span className="text-2xl font-bold text-gray-900 font-serif">{shopName}</span>
+              <span className="text-xs text-gray-500 -mt-1">{shopTagline}</span>
             </div>
           </Link>
 

@@ -142,3 +142,22 @@ class Order(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: OrderStatus
+
+class SiteSettingsData(BaseModel):
+    shopName: str = ""
+    shopTagline: str = ""
+    contactPhone: str = ""
+    contactEmail: str = ""
+    contactAddress: str = ""
+    socialInstagram: str = ""
+    socialVk: str = ""
+    socialTelegram: str = ""
+    bannerTitle: str = ""
+    bannerSubtitle: str = ""
+    bannerEnabled: bool = True
+    deliveryInfo: str = ""
+    paymentInfo: str = ""
+    freeDeliveryFrom: str = ""
+    seoTitle: str = ""
+    seoDescription: str = ""
+    seoKeywords: str = ""

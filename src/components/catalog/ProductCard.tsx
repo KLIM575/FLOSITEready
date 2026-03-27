@@ -17,6 +17,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     addToCart(product, 1, defaultSize);
   };
 
+  const shortDescription = product.description.length > 90
+    ? product.description.slice(0, 90).trimEnd() + '...'
+    : product.description;
+
   const displayPrice = product.sizes && product.sizes.length > 0
     ? `от ${Math.min(...product.sizes.map(s => s.price)).toLocaleString('ru-RU')} ₽`
     : `${product.price.toLocaleString('ru-RU')} ₽`;
@@ -48,17 +52,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <h3 className="text-lg font-semibold text-gray-900 mt-2 mb-3 line-clamp-2">
             {product.name}
           </h3>
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">
-            {product.description}
+          <p className="text-sm text-gray-600 mb-4 flex-1">
+            {shortDescription}
           </p>
-          <div className="flex items-center justify-between mt-auto">
-            <span className="text-2xl font-bold text-gray-900">
+          <div className="flex items-center justify-between mt-auto gap-2">
+            <span className="text-xl font-bold text-gray-900 whitespace-nowrap">
               {displayPrice}
             </span>
             <button 
               onClick={handleAddToCart}
               disabled={!product.inStock}
-              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
             >
               В корзину
             </button>

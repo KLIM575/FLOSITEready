@@ -1,4 +1,4 @@
-import type { Product, Order, User, CartItem } from '../types/index';
+import type { Product, Order, User, CartItem, SiteSettings } from '../types/index';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -177,6 +177,21 @@ export const api = {
     products: async (query: string): Promise<Product[]> => {
       const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
       return handleResponse<Product[]>(response);
+    },
+  },
+
+  settings: {
+    get: async (): Promise<SiteSettings> => {
+      const response = await fetch(`${API_BASE_URL}/settings`);
+      return handleResponse<SiteSettings>(response);
+    },
+    update: async (data: SiteSettings): Promise<SiteSettings> => {
+      const response = await fetch(`${API_BASE_URL}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<SiteSettings>(response);
     },
   },
 };

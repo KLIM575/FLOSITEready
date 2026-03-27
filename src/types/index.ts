@@ -61,3 +61,23 @@ export interface Order {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface SiteSettings {
+  shopName: string;
+  shopTagline: string;
+  contactPhone: string;
+  contactEmail: string;
+  contactAddress: string;
+  socialInstagram: string;
+  socialVk: string;
+  socialTelegram: string;
+  bannerTitle: string;
+  bannerSubtitle: string;
+  bannerEnabled: boolean;
+  deliveryInfo: string;
+  paymentInfo: string;
+  freeDeliveryFrom: string;
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+}

@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { mockProducts } from '../../data/products';
+import { api } from '../../services/api';
+import type { Product } from '../../types/index';
 import ProductCard from '../catalog/ProductCard';
 
 const FeaturedProducts: React.FC = () => {
-  const featuredProducts = mockProducts.slice(0, 4);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    api.products.getAll()
+      .then((products) => setFeaturedProducts(products.slice(0, 4)))
+      .catch(() => {});
+  }, []);
 
   return (
     <section className="py-20 px-4 bg-gradient-to-br from-elegant-50 to-primary-50">

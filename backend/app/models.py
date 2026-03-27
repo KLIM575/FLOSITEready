@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, ForeignKey, DateTime, Enum
+from sqlalchemy import Column, String, Integer, Float, Boolean, ForeignKey, DateTime, Enum, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -106,3 +106,9 @@ class ShippingAddress(Base):
     comment = Column(String, nullable=True)
     
     order = relationship("Order", back_populates="shipping_address")
+
+class SiteSettings(Base):
+    __tablename__ = "site_settings"
+
+    id = Column(Integer, primary_key=True, default=1)
+    data = Column(Text, nullable=False, default='{}')
