@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -32,6 +32,13 @@ const CheckoutPage: React.FC = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    };
+  }, []);
 
   const totalPrice = getTotalPrice();
   const deliveryFee = totalPrice >= 5000 ? 0 : 500;
@@ -68,9 +75,9 @@ const CheckoutPage: React.FC = () => {
       const order = await api.orders.create(orderData);
       setOrderId(order.id);
       setStep('success');
+      clearCart();
       
-      setTimeout(() => {
-        clearCart();
+      redirectTimer.current = setTimeout(() => {
         navigate('/');
       }, 5000);
     } catch (err) {

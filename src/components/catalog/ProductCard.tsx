@@ -1,13 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import type { Product } from '../../types/index';
+import type { Product, ProductCardStyle } from '../../types/index';
 import { useCart } from '../../context/CartContext';
 
 interface ProductCardProps {
   product: Product;
+  cardStyle?: ProductCardStyle;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const CARD_STYLE_CLASS: Record<ProductCardStyle, string> = {
+  default:  'shadow-lg hover:shadow-2xl',
+  minimal:  'shadow-none border border-gray-100 hover:shadow-md',
+  bordered: 'shadow-none border-2 border-gray-200 hover:border-primary-300',
+};
+
+const ProductCard: React.FC<ProductCardProps> = ({ product, cardStyle = 'default' }) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -30,7 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       to={`/product/${product.id}`}
       className="group block"
     >
-      <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 h-full flex flex-col">
+      <div className={`bg-white rounded-xl overflow-hidden transition-all transform hover:-translate-y-2 h-full flex flex-col ${CARD_STYLE_CLASS[cardStyle]}`}>
         <div className="aspect-square overflow-hidden bg-gray-100 relative">
           <img 
             src={product.image} 

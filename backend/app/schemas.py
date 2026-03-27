@@ -161,3 +161,20 @@ class SiteSettingsData(BaseModel):
     seoTitle: str = ""
     seoDescription: str = ""
     seoKeywords: str = ""
+
+
+class AppearanceSettingsData(BaseModel):
+    colorTheme: str = "rose"
+    fontPair: str = "default"
+    logoUrl: str = ""
+    faviconUrl: str = ""
+    bannerBgImage: str = ""
+    bannerBgColor: str = ""
+    bannerButtonText: str = ""
+    bannerButtonLink: str = ""
+    darkModeEnabled: bool = False
+    catalogColumns: str = "3"
+    productCardStyle: str = "default"
+    footerCopyright: str = ""
+    buttonStyle: str = "rounded"
+    buttonShadow: bool = False

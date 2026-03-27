@@ -1,4 +1,4 @@
-import type { Product, Order, User, CartItem, SiteSettings } from '../types/index';
+import type { Product, Order, User, CartItem, SiteSettings, AppearanceSettings } from '../types/index';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -192,6 +192,21 @@ export const api = {
         body: JSON.stringify(data),
       });
       return handleResponse<SiteSettings>(response);
+    },
+  },
+
+  appearance: {
+    get: async (): Promise<AppearanceSettings> => {
+      const response = await fetch(`${API_BASE_URL}/appearance`);
+      return handleResponse<AppearanceSettings>(response);
+    },
+    update: async (data: AppearanceSettings): Promise<AppearanceSettings> => {
+      const response = await fetch(`${API_BASE_URL}/appearance`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<AppearanceSettings>(response);
     },
   },
 };

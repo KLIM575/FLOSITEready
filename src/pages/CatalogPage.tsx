@@ -5,9 +5,18 @@ import { PRODUCT_CATEGORIES } from '../constants';
 import { api } from '../services/api';
 import type { Product } from '../types/index';
 import Loading from '../components/common/Loading';
+import { useAppearance } from '../context/AppearanceContext';
+import type { ProductCardStyle } from '../types/index';
+
+const COLUMNS_GRID: Record<string, string> = {
+  '2': 'grid-cols-1 sm:grid-cols-2',
+  '3': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+  '4': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+};
 
 const CatalogPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { appearance } = useAppearance();
   const [selectedCategory, setSelectedCategory] = useState<string>(
     searchParams.get('category') || 'Все'
   );
@@ -122,9 +131,13 @@ const CatalogPage: React.FC = () => {
         </div>
 
         {products.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className={`grid gap-8 ${COLUMNS_GRID[appearance.catalogColumns] ?? COLUMNS_GRID['3']}`}>
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                cardStyle={appearance.productCardStyle as ProductCardStyle}
+              />
             ))}
           </div>
         ) : (

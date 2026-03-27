@@ -36,7 +36,7 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
             "id": order_id,
             "user_id": order.user_id,
             "total_amount": total_amount,
-            "status": "PENDING",
+            "status": "pending",
             "created_at": now,
             "updated_at": now
         }
@@ -99,7 +99,7 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
         "id": order_id,
         "user_id": order.user_id,
         "total_amount": total_amount,
-        "status": "PENDING",
+            "status": "pending",
         "created_at": now.isoformat(),
         "updated_at": now.isoformat(),
         "items": items_data,
@@ -145,7 +145,7 @@ def _serialize_order_dict(db: Session, db_order: models.Order) -> dict:
         "id": db_order.id,
         "user_id": db_order.user_id,
         "total_amount": db_order.total_amount,
-        "status": db_order.status.value,
+        "status": db_order.status,
         "created_at": db_order.created_at.isoformat(),
         "updated_at": db_order.updated_at.isoformat(),
         "items": serialized_items,
@@ -186,10 +186,9 @@ def update_order_status(
         return None
     
     status_value = status.value if hasattr(status, 'value') else str(status)
-    status_upper = status_value.upper()
     db.execute(
         text("UPDATE orders SET status = :status, updated_at = :updated_at WHERE id = :id"),
-        {"status": status_upper, "updated_at": datetime.utcnow(), "id": order_id}
+        {"status": status_value, "updated_at": datetime.utcnow(), "id": order_id}
     )
     db.commit()
     db.refresh(db_order)

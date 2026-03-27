@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { AppearanceSettings, ColorTheme, FontPair } from '../types/index';
+import { api } from '../services/api';
 
 const COLOR_THEMES: Record<ColorTheme, Record<string, string>> = {
   rose: {
@@ -57,7 +58,8 @@ const STORAGE_KEY = 'appearance_settings';
 
 interface AppearanceContextType {
   appearance: AppearanceSettings;
-  updateAppearance: (settings: AppearanceSettings) => void;
+  loading: boolean;
+  updateAppearance: (settings: AppearanceSettings) => Promise<void>;
 }
 
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
@@ -105,19 +107,39 @@ export const AppearanceProvider: React.FC<{ children: ReactNode }> = ({ children
       return DEFAULT_SETTINGS;
     }
   });
+  const [loading, setLoading] = useState(true);
 
+  // Apply cached settings immediately on mount (no flash)
   useEffect(() => {
     applySettings(appearance);
-  }, [appearance]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateAppearance = useCallback((settings: AppearanceSettings) => {
+  // Then fetch authoritative values from backend
+  useEffect(() => {
+    api.appearance.get()
+      .then(data => {
+        const merged = { ...DEFAULT_SETTINGS, ...data };
+        setAppearance(merged);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        applySettings(merged);
+      })
+      .catch(() => {
+        // Keep localStorage values if backend is unreachable
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const updateAppearance = useCallback(async (settings: AppearanceSettings) => {
+    // Apply immediately for instant feedback
     setAppearance(settings);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     applySettings(settings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    // Persist to backend
+    await api.appearance.update(settings);
   }, []);
 
   return (
-    <AppearanceContext.Provider value={{ appearance, updateAppearance }}>
+    <AppearanceContext.Provider value={{ appearance, loading, updateAppearance }}>
       {children}
     </AppearanceContext.Provider>
   );

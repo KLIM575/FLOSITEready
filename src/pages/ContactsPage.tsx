@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
 const ContactsPage: React.FC = () => {
   const { settings } = useSiteSettings();
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [submitted, setSubmitted] = useState(false);
 
   const phone = settings.contactPhone || '+7 (900) 123-45-67';
   const email = settings.contactEmail || 'info@flowershop.ru';
@@ -74,47 +76,70 @@ const ContactsPage: React.FC = () => {
               Напишите нам
             </h2>
             
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ваше имя
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Иван Иванов"
-                />
+            {submitted ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">✅</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Сообщение отправлено!</h3>
+                <p className="text-gray-600 mb-4">Мы свяжемся с вами в ближайшее время.</p>
+                <button
+                  onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', message: '' }); }}
+                  className="text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Отправить ещё
+                </button>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="ivan@example.com"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Сообщение
-                </label>
-                <textarea
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Ваше сообщение..."
-                />
-              </div>
-              
-              <button
-                type="submit"
-                className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
-              >
-                Отправить сообщение
-              </button>
-            </form>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ваше имя
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Иван Иванов"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="ivan@example.com"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Сообщение
+                  </label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Ваше сообщение..."
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                >
+                  Отправить сообщение
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

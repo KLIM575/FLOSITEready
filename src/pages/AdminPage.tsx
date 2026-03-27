@@ -7,7 +7,7 @@ import SiteSettingsManager from '../components/admin/SiteSettings';
 import AppearanceManager from '../components/admin/AppearanceManager';
 
 const AdminPage: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'settings' | 'appearance'>('products');
 
   if (!isAdmin) {

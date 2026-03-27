@@ -26,7 +26,7 @@ def get_settings(db: Session = Depends(get_db)):
 @router.put("", response_model=schemas.SiteSettingsData)
 def update_settings(payload: schemas.SiteSettingsData, db: Session = Depends(get_db)):
     row = _get_or_create_row(db)
-    row.data = json.dumps(payload.dict())
+    row.data = json.dumps(payload.model_dump())
     db.commit()
     db.refresh(row)
     return payload

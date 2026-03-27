@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppearance, COLOR_THEMES, FONT_PAIRS } from '../../context/AppearanceContext';
 import type {
   AppearanceSettings,
@@ -13,20 +13,35 @@ const AppearanceManager: React.FC = () => {
   const { appearance, updateAppearance } = useAppearance();
   const [local, setLocal] = useState<AppearanceSettings>({ ...appearance });
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState('colors');
+
+  useEffect(() => {
+    setLocal({ ...appearance });
+  }, [appearance]);
 
   const set = <K extends keyof AppearanceSettings>(key: K, value: AppearanceSettings[K]) => {
     setLocal(prev => ({ ...prev, [key]: value }));
     setSaved(false);
+    setSaveError(null);
   };
 
-  const handleSave = () => {
-    updateAppearance(local);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await updateAppearance(local);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setSaveError('Не удалось сохранить. Проверьте подключение к серверу.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const confirmed = window.confirm('Сбросить все настройки внешнего вида к значениям по умолчанию?');
     if (!confirmed) return;
     const def: AppearanceSettings = {
@@ -46,7 +61,7 @@ const AppearanceManager: React.FC = () => {
       buttonShadow: false,
     };
     setLocal(def);
-    updateAppearance(def);
+    await updateAppearance(def);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -106,15 +121,18 @@ const AppearanceManager: React.FC = () => {
               </div>
               <LivePreview label="Предпросмотр цвета">
                 <div className="flex gap-3 flex-wrap">
-                  {(['50','100','200','300','400','500','600','700','800','900'] as const).map(shade => (
-                    <div key={shade} className="text-center">
-                      <div
-                        className="w-10 h-10 rounded-lg shadow-sm border border-black/5"
-                        style={{ backgroundColor: COLOR_THEMES[local.colorTheme][`--p${shade}`] }}
-                      />
-                      <span className="text-xs text-gray-400 mt-1 block">{shade}</span>
-                    </div>
-                  ))}
+                  {(['50','100','200','300','400','500','600','700','800','900'] as const).map(shade => {
+                    const palette = COLOR_THEMES[local.colorTheme] ?? COLOR_THEMES.rose;
+                    return (
+                      <div key={shade} className="text-center">
+                        <div
+                          className="w-10 h-10 rounded-lg shadow-sm border border-black/5"
+                          style={{ backgroundColor: palette[`--p${shade}`] }}
+                        />
+                        <span className="text-xs text-gray-400 mt-1 block">{shade}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </LivePreview>
             </Section>
@@ -459,16 +477,18 @@ const AppearanceManager: React.FC = () => {
           )}
 
           {/* Save bar */}
-          <div className="flex items-center gap-4 pt-2 border-t border-gray-100">
+          <div className="flex items-center gap-4 pt-2 border-t border-gray-100 flex-wrap">
             <button
               onClick={handleSave}
-              className="px-6 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 active:scale-95 transition-all"
+              disabled={saving}
+              className="px-6 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Сохранить
+              {saving ? 'Сохранение...' : 'Сохранить'}
             </button>
             <button
               onClick={handleReset}
-              className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+              disabled={saving}
+              className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-800 transition-colors disabled:opacity-40"
             >
               Сбросить всё
             </button>
@@ -477,8 +497,11 @@ const AppearanceManager: React.FC = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Применено
+                Сохранено и применено
               </span>
+            )}
+            {saveError && (
+              <span className="text-sm text-red-600">{saveError}</span>
             )}
           </div>
         </div>
