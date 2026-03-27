@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useAppearance } from '../../context/AppearanceContext';
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,6 +14,7 @@ const Header: React.FC = () => {
   const { getItemCount } = useCart();
   const { user, isAdmin, login, register, logout } = useAuth();
   const { settings } = useSiteSettings();
+  const { appearance } = useAppearance();
 
   const shopName = settings.shopName || 'Flower Shop';
   const shopTagline = settings.shopTagline || 'Магазин цветов';
@@ -29,11 +31,21 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center space-x-2 group">
-            <span className="text-4xl group-hover:scale-110 transition-transform">🌸</span>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-gray-900 font-serif">{shopName}</span>
-              <span className="text-xs text-gray-500 -mt-1">{shopTagline}</span>
-            </div>
+            {appearance.logoUrl ? (
+              <img
+                src={appearance.logoUrl}
+                alt={shopName}
+                className="h-10 object-contain group-hover:scale-105 transition-transform"
+              />
+            ) : (
+              <span className="text-4xl group-hover:scale-110 transition-transform">🌸</span>
+            )}
+            {!appearance.logoUrl && (
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-gray-900 font-serif">{shopName}</span>
+                <span className="text-xs text-gray-500 -mt-1">{shopTagline}</span>
+              </div>
+            )}
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">

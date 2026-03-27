@@ -62,6 +62,29 @@ export interface Order {
   updatedAt: Date;
 }
 
+export type ColorTheme = 'rose' | 'violet' | 'blue' | 'emerald' | 'amber';
+export type FontPair = 'default' | 'modern' | 'classic' | 'minimal';
+export type CatalogColumns = '2' | '3' | '4';
+export type ProductCardStyle = 'default' | 'minimal' | 'bordered';
+export type ButtonStyle = 'rounded' | 'square' | 'pill';
+
+export interface AppearanceSettings {
+  colorTheme: ColorTheme;
+  fontPair: FontPair;
+  logoUrl: string;
+  faviconUrl: string;
+  bannerBgImage: string;
+  bannerBgColor: string;
+  bannerButtonText: string;
+  bannerButtonLink: string;
+  darkModeEnabled: boolean;
+  catalogColumns: CatalogColumns;
+  productCardStyle: ProductCardStyle;
+  footerCopyright: string;
+  buttonStyle: ButtonStyle;
+  buttonShadow: boolean;
+}
+
 export interface SiteSettings {
   shopName: string;
   shopTagline: string;

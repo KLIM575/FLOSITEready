@@ -1,8 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Cormorant+Garamond:wght@400;500;600;700&family=EB+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Primary color — Rose (default) */
+  --p50: #fdf4f5;
+  --p100: #fce7eb;
+  --p200: #f9d0d9;
+  --p300: #f5a8b8;
+  --p400: #ef7591;
+  --p500: #e5446d;
+  --p600: #d1285c;
+  --p700: #b01d4d;
+  --p800: #931b47;
+  --p900: #7d1b42;
+
+  /* Font families */
+  --font-heading: 'Playfair Display';
+  --font-body: 'Inter';
+
+  /* Button radius */
+  --btn-radius: 0.75rem;
+
+  /* Button shadow */
+  --btn-shadow: none;
+}
+
+/* ── Dark mode ─────────────────────────────────────────────── */
+html.dark-mode {
+  color-scheme: dark;
+}
+html.dark-mode body {
+  background-color: #111827;
+  color: #f9fafb;
+}
+html.dark-mode header {
+  background-color: #1f2937 !important;
+}
+html.dark-mode footer {
+  background-color: #0f172a !important;
+}
+html.dark-mode .bg-white {
+  background-color: #1f2937 !important;
+  color: #f9fafb;
+}
+html.dark-mode .bg-gray-50,
+html.dark-mode .bg-elegant-50,
+html.dark-mode .bg-primary-50 {
+  background-color: #111827 !important;
+}
+html.dark-mode .text-gray-900 { color: #f9fafb !important; }
+html.dark-mode .text-gray-800 { color: #f3f4f6 !important; }
+html.dark-mode .text-gray-700 { color: #e5e7eb !important; }
+html.dark-mode .text-gray-600 { color: #d1d5db !important; }
+html.dark-mode .border-gray-200 { border-color: #374151 !important; }
+html.dark-mode .border-gray-300 { border-color: #4b5563 !important; }
+html.dark-mode input,
+html.dark-mode textarea,
+html.dark-mode select {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+  border-color: #4b5563 !important;
+}
+
+/* ── Button style overrides ─────────────────────────────────── */
+body.btn-pill .rounded-xl,
+body.btn-pill .rounded-lg,
+body.btn-pill .rounded-md {
+  border-radius: 9999px !important;
+}
+body.btn-square .rounded-xl,
+body.btn-square .rounded-lg,
+body.btn-square .rounded-md {
+  border-radius: 4px !important;
+}
+body.btn-shadow button,
+body.btn-shadow a[class*="bg-primary"] {
+  box-shadow: 0 4px 14px 0 rgba(0,0,0,0.2) !important;
+}
 
 @layer base {
   * {

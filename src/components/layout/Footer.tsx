@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useAppearance } from '../../context/AppearanceContext';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { settings } = useSiteSettings();
+  const { appearance } = useAppearance();
 
   const shopName = settings.shopName || 'Flower Shop';
   const shopTagline = settings.shopTagline || 'Создаём неповторимые букеты для ваших особенных моментов с 2020 года.';
@@ -176,7 +178,9 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-gray-400">
-              &copy; {currentYear} {shopName}. Все права защищены.
+              {appearance.footerCopyright
+                ? appearance.footerCopyright
+                : `© ${currentYear} ${shopName}. Все права защищены.`}
             </p>
             <div className="flex space-x-6 text-sm">
               <Link to="/privacy" className="text-gray-400 hover:text-primary-400 transition-colors">
