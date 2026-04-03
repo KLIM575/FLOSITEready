@@ -5,6 +5,8 @@ import type {
   SiteSettings,
   AppearanceSettings,
   DeliveryZone,
+  SalesStats,
+  VisitsStats,
 } from '../types/index';
 
 /** В dev без VITE_API_URL запросы идут на тот же origin → Vite проксирует на бэкенд (нет проблем CORS localhost vs 127.0.0.1). */
@@ -288,6 +290,37 @@ export const api = {
         const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
         throw new ApiError(response.status, error.detail || error.message || 'Request failed');
       }
+    },
+  },
+
+  stats: {
+    recordPageView: async (path: string): Promise<void> => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/stats/pageview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path }),
+        });
+        if (!response.ok) {
+          await response.json().catch(() => null);
+        }
+      } catch {
+        /* ignore analytics failures */
+      }
+    },
+
+    getSales: async (days: number = 30): Promise<SalesStats> => {
+      const response = await fetch(
+        `${API_BASE_URL}/stats/sales?days=${encodeURIComponent(String(days))}`
+      );
+      return handleResponse<SalesStats>(response);
+    },
+
+    getVisits: async (days: number = 30): Promise<VisitsStats> => {
+      const response = await fetch(
+        `${API_BASE_URL}/stats/visits?days=${encodeURIComponent(String(days))}`
+      );
+      return handleResponse<VisitsStats>(response);
     },
   },
 };

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .database import init_db
-from .routes import products, orders, auth, search, settings, appearance, delivery
+from .routes import products, orders, auth, search, settings, appearance, delivery, stats
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -39,6 +39,7 @@ app.include_router(search.router)
 app.include_router(settings.router)
 app.include_router(appearance.router)
 app.include_router(delivery.router)
+app.include_router(stats.router)
 
 @app.on_event("startup")
 def on_startup():

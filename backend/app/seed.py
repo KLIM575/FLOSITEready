@@ -12,6 +12,9 @@ def seed_database():
         existing_products = db.query(Product).count()
         if existing_products > 0:
             print("Database already seeded. Skipping...")
+            from .seed_demo_stats import seed_demo_statistics
+
+            seed_demo_statistics()
             return
         
         print("Creating admin user...")
@@ -176,7 +179,11 @@ def seed_database():
         print(f"Successfully seeded {len(products_data)} products!")
         print(f"Admin user: admin@flowershop.com / admin123")
         print(f"Test user: user@test.com / user123")
-        
+
+        from .seed_demo_stats import seed_demo_statistics
+
+        seed_demo_statistics()
+
     except Exception as e:
         print(f"Error seeding database: {e}")
         db.rollback()

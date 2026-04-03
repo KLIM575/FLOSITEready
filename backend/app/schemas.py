@@ -201,3 +201,43 @@ class AppearanceSettingsData(BaseModel):
     catalogColumns: str = "3"
     productCardStyle: str = "default"
     footerCopyright: str = ""
+
+
+class PageViewCreate(BaseModel):
+    path: str = Field(..., min_length=1, max_length=500)
+
+
+class SalesDayRow(BaseModel):
+    date: str
+    order_count: int
+    revenue: float
+
+
+class OrderStatusCount(BaseModel):
+    status: str
+    count: int
+
+
+class SalesStatsResponse(BaseModel):
+    period_days: int
+    total_orders: int
+    revenue_total: float
+    by_day: List[SalesDayRow]
+    by_status: List[OrderStatusCount]
+
+
+class VisitsDayRow(BaseModel):
+    date: str
+    views: int
+
+
+class PathCount(BaseModel):
+    path: str
+    count: int
+
+
+class VisitsStatsResponse(BaseModel):
+    period_days: int
+    total_views: int
+    by_day: List[VisitsDayRow]
+    top_paths: List[PathCount]

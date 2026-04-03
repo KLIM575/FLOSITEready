@@ -124,3 +124,11 @@ class SiteSettings(Base):
 
     id = Column(Integer, primary_key=True, default=1)
     data = Column(Text, nullable=False, default='{}')
+
+
+class PageView(Base):
+    __tablename__ = "page_views"
+
+    id = Column(String, primary_key=True, index=True)
+    path = Column(String(500), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)

@@ -71,6 +71,42 @@ export interface DeliveryZone {
   sortOrder: number;
 }
 
+export interface SalesDayRow {
+  date: string;
+  order_count: number;
+  revenue: number;
+}
+
+export interface OrderStatusCount {
+  status: string;
+  count: number;
+}
+
+export interface SalesStats {
+  period_days: number;
+  total_orders: number;
+  revenue_total: number;
+  by_day: SalesDayRow[];
+  by_status: OrderStatusCount[];
+}
+
+export interface VisitsDayRow {
+  date: string;
+  views: number;
+}
+
+export interface PathCount {
+  path: string;
+  count: number;
+}
+
+export interface VisitsStats {
+  period_days: number;
+  total_views: number;
+  by_day: VisitsDayRow[];
+  top_paths: PathCount[];
+}
+
 export type ColorTheme = 'rose' | 'violet' | 'blue' | 'emerald' | 'amber';
 export type FontPair = 'default' | 'modern' | 'classic' | 'minimal';
 export type CatalogColumns = '2' | '3' | '4';
