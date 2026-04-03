@@ -231,6 +231,21 @@ const OrderManager: React.FC = () => {
                         <div>
                           <h4 className="text-sm font-semibold text-gray-700 mb-3">Доставка</h4>
                           <div className="bg-white rounded-lg p-4 shadow-sm space-y-2 text-sm text-gray-700">
+                            {(order.deliveryZoneId || order.shippingAddress?.delivery_zone_name) && (
+                              <div>
+                                <span className="font-medium">Район:</span>{' '}
+                                {order.shippingAddress?.delivery_zone_name ?? '—'}
+                                {order.deliveryFee != null && order.deliveryFee > 0 && (
+                                  <span className="text-gray-600">
+                                    {' '}
+                                    (доставка: {order.deliveryFee.toLocaleString('ru-RU')} ₽)
+                                  </span>
+                                )}
+                                {order.deliveryFee === 0 && (
+                                  <span className="text-green-600"> — бесплатно</span>
+                                )}
+                              </div>
+                            )}
                             <div>
                               <span className="font-medium">Получатель:</span>{' '}
                               {order.shippingAddress?.name}

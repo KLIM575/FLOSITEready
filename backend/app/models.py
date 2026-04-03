@@ -66,12 +66,23 @@ class ProductImage(Base):
     
     product = relationship("Product", back_populates="images")
 
+class DeliveryZone(Base):
+    __tablename__ = "delivery_zones"
+
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    sort_order = Column(Integer, default=0, nullable=False)
+
+
 class Order(Base):
     __tablename__ = "orders"
     
     id = Column(String, primary_key=True, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=True)
     total_amount = Column(Float, nullable=False)
+    delivery_zone_id = Column(String, nullable=True)
+    delivery_fee = Column(Float, default=0, nullable=False)
     status = Column(String, default="pending", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -104,6 +115,7 @@ class ShippingAddress(Base):
     postal_code = Column(String, nullable=True)
     address = Column(String, nullable=False)
     comment = Column(String, nullable=True)
+    delivery_zone_name = Column(String, nullable=True)
     
     order = relationship("Order", back_populates="shipping_address")
 

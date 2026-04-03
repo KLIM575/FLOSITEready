@@ -56,17 +56,25 @@ export interface Order {
   userId?: string;
   items: OrderItem[];
   totalAmount: number;
+  deliveryFee?: number;
+  deliveryZoneId?: string | null;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   shippingAddress: any;
   createdAt: Date;
   updatedAt: Date;
 }
 
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  price: number;
+  sortOrder: number;
+}
+
 export type ColorTheme = 'rose' | 'violet' | 'blue' | 'emerald' | 'amber';
 export type FontPair = 'default' | 'modern' | 'classic' | 'minimal';
 export type CatalogColumns = '2' | '3' | '4';
 export type ProductCardStyle = 'default' | 'minimal' | 'bordered';
-export type ButtonStyle = 'rounded' | 'square' | 'pill';
 
 export interface AppearanceSettings {
   colorTheme: ColorTheme;
@@ -81,8 +89,6 @@ export interface AppearanceSettings {
   catalogColumns: CatalogColumns;
   productCardStyle: ProductCardStyle;
   footerCopyright: string;
-  buttonStyle: ButtonStyle;
-  buttonShadow: boolean;
 }
 
 export interface SiteSettings {

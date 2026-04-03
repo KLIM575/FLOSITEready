@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppearance, COLOR_THEMES, FONT_PAIRS } from '../../context/AppearanceContext';
+import { api } from '../../services/api';
 import type {
   AppearanceSettings,
   ColorTheme,
   FontPair,
   CatalogColumns,
   ProductCardStyle,
-  ButtonStyle,
 } from '../../types/index';
 
 const AppearanceManager: React.FC = () => {
@@ -16,6 +16,13 @@ const AppearanceManager: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState('colors');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const logoFileRef = useRef<HTMLInputElement>(null);
+  const faviconFileRef = useRef<HTMLInputElement>(null);
+  const bannerFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLocal({ ...appearance });
@@ -57,8 +64,6 @@ const AppearanceManager: React.FC = () => {
       catalogColumns: '3',
       productCardStyle: 'default',
       footerCopyright: '',
-      buttonStyle: 'rounded',
-      buttonShadow: false,
     };
     setLocal(def);
     await updateAppearance(def);
@@ -74,7 +79,6 @@ const AppearanceManager: React.FC = () => {
     { id: 'darkmode',label: 'Тема',        icon: <MoonIcon /> },
     { id: 'layout',  label: 'Макет',       icon: <LayoutIcon /> },
     { id: 'footer',  label: 'Футер',       icon: <FooterIcon /> },
-    { id: 'buttons', label: 'Кнопки',      icon: <ButtonIcon /> },
   ];
 
   return (
@@ -182,12 +186,29 @@ const AppearanceManager: React.FC = () => {
           {/* ── Logo ───────────────────────────────────── */}
           {activeSection === 'logo' && (
             <Section title="Логотип и фавикон">
-              <Field
+              <ImageUrlField
                 label="URL логотипа"
                 placeholder="https://example.com/logo.png"
                 value={local.logoUrl}
                 onChange={v => set('logoUrl', v)}
-                hint="PNG или SVG с прозрачным фоном, рекомендуемая высота 40–60 px"
+                hint="PNG или SVG с прозрачным фоном, рекомендуемая высота 40–60 px. Можно вставить ссылку или загрузить файл."
+                uploadLabel="Загрузить логотип"
+                uploading={uploadingLogo}
+                inputRef={logoFileRef}
+                accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+                onPickFile={async file => {
+                  setUploadError(null);
+                  setUploadingLogo(true);
+                  try {
+                    const { url } = await api.appearance.uploadAsset(file, 'logo');
+                    set('logoUrl', url);
+                  } catch {
+                    setUploadError('Не удалось загрузить логотип.');
+                  } finally {
+                    setUploadingLogo(false);
+                    if (logoFileRef.current) logoFileRef.current.value = '';
+                  }
+                }}
               />
               {local.logoUrl && (
                 <LivePreview label="Предпросмотр логотипа">
@@ -204,13 +225,46 @@ const AppearanceManager: React.FC = () => {
                   </div>
                 </LivePreview>
               )}
-              <Field
+              <ImageUrlField
                 label="URL фавикона"
                 placeholder="https://example.com/favicon.ico"
                 value={local.faviconUrl}
                 onChange={v => set('faviconUrl', v)}
-                hint="ICO, PNG 32×32 или 16×16"
+                hint="ICO, PNG 32×32 или 16×16. Можно вставить ссылку или загрузить файл."
+                uploadLabel="Загрузить фавикон"
+                uploading={uploadingFavicon}
+                inputRef={faviconFileRef}
+                accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif,image/x-icon,.ico"
+                onPickFile={async file => {
+                  setUploadError(null);
+                  setUploadingFavicon(true);
+                  try {
+                    const { url } = await api.appearance.uploadAsset(file, 'favicon');
+                    set('faviconUrl', url);
+                  } catch {
+                    setUploadError('Не удалось загрузить фавикон.');
+                  } finally {
+                    setUploadingFavicon(false);
+                    if (faviconFileRef.current) faviconFileRef.current.value = '';
+                  }
+                }}
               />
+              {local.faviconUrl && (
+                <LivePreview label="Предпросмотр фавикона">
+                  <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl w-fit">
+                    <img
+                      src={local.faviconUrl}
+                      alt="favicon"
+                      className="w-8 h-8 object-contain rounded"
+                      onError={e => (e.currentTarget.style.display = 'none')}
+                    />
+                    <span className="text-sm text-gray-600">Как в браузере</span>
+                  </div>
+                </LivePreview>
+              )}
+              {uploadError && activeSection === 'logo' && (
+                <p className="text-sm text-red-600">{uploadError}</p>
+              )}
             </Section>
           )}
 
@@ -220,12 +274,29 @@ const AppearanceManager: React.FC = () => {
               <p className="text-sm text-gray-500 -mt-3">
                 Текст и переключатель баннера — в разделе «Настройки сайта → Баннер».
               </p>
-              <Field
-                label="Фоновое изображение баннера (URL)"
+              <ImageUrlField
+                label="Изображение баннера"
                 placeholder="https://example.com/hero.jpg"
                 value={local.bannerBgImage}
                 onChange={v => set('bannerBgImage', v)}
-                hint="Рекомендуемый размер: 1920×600 px"
+                hint="Показывается в правой части баннера на главной (как иллюстрация). Можно вставить ссылку или загрузить файл."
+                uploadLabel="Загрузить изображение"
+                uploading={uploadingBanner}
+                inputRef={bannerFileRef}
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                onPickFile={async file => {
+                  setUploadError(null);
+                  setUploadingBanner(true);
+                  try {
+                    const { url } = await api.appearance.uploadAsset(file, 'banner');
+                    set('bannerBgImage', url);
+                  } catch {
+                    setUploadError('Не удалось загрузить изображение баннера.');
+                  } finally {
+                    setUploadingBanner(false);
+                    if (bannerFileRef.current) bannerFileRef.current.value = '';
+                  }
+                }}
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -255,7 +326,7 @@ const AppearanceManager: React.FC = () => {
                   )}
                 </div>
                 <p className="mt-1 text-xs text-gray-400">
-                  Используется как запасной фон, если изображение не задано
+                  Фон полосы баннера за текстом и картинкой (если не задан — градиент по умолчанию)
                 </p>
               </div>
               <Field
@@ -270,24 +341,43 @@ const AppearanceManager: React.FC = () => {
                 value={local.bannerButtonLink}
                 onChange={v => set('bannerButtonLink', v)}
               />
+              {uploadError && activeSection === 'banner' && (
+                <p className="text-sm text-red-600 -mt-2">{uploadError}</p>
+              )}
               {(local.bannerBgImage || local.bannerBgColor) && (
                 <LivePreview label="Предпросмотр баннера">
                   <div
-                    className="w-full h-28 rounded-xl flex items-center justify-center relative overflow-hidden"
-                    style={{
-                      backgroundColor: local.bannerBgColor || '#fdf4f5',
-                      backgroundImage: local.bannerBgImage ? `url(${local.bannerBgImage})` : undefined,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
+                    className={`w-full rounded-xl overflow-hidden flex items-stretch gap-4 p-4 border border-gray-200 ${
+                      local.bannerBgColor ? '' : 'bg-gradient-to-br from-primary-50 via-white to-elegant-50'
+                    }`}
+                    style={local.bannerBgColor ? { backgroundColor: local.bannerBgColor } : undefined}
                   >
-                    <div className="bg-black/30 absolute inset-0 rounded-xl" />
-                    <div className="relative text-center text-white">
-                      <p className="font-bold text-lg font-serif">Заголовок баннера</p>
+                    <div
+                      className={`flex-1 min-w-0 flex flex-col justify-center text-left ${
+                        local.bannerBgColor ? 'text-white' : 'text-gray-900'
+                      }`}
+                    >
+                      <p className="font-bold text-sm font-serif">Заголовок баннера</p>
+                      <p className={`text-xs mt-1 ${local.bannerBgColor ? 'text-white/80' : 'text-gray-500'}`}>
+                        Подзаголовок
+                      </p>
                       {local.bannerButtonText && (
-                        <span className="mt-2 inline-block bg-white text-gray-900 text-xs font-semibold px-4 py-1.5 rounded-lg">
+                        <span className="mt-3 inline-block bg-primary-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg w-fit">
                           {local.bannerButtonText}
                         </span>
+                      )}
+                    </div>
+                    <div className="w-32 sm:w-40 shrink-0 rounded-xl overflow-hidden bg-gray-200 shadow-md aspect-[4/3]">
+                      {local.bannerBgImage ? (
+                        <img
+                          src={local.bannerBgImage}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400 text-center px-1">
+                          стандартное фото
+                        </div>
                       )}
                     </div>
                   </div>
@@ -413,69 +503,6 @@ const AppearanceManager: React.FC = () => {
             </Section>
           )}
 
-          {/* ── Buttons ────────────────────────────────── */}
-          {activeSection === 'buttons' && (
-            <Section title="Стиль кнопок">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Форма кнопок
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(Object.entries(BUTTON_STYLE_LABELS) as [ButtonStyle, string][]).map(([style, label]) => (
-                    <button
-                      key={style}
-                      onClick={() => set('buttonStyle', style)}
-                      className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 transition-all ${
-                        local.buttonStyle === style
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <span
-                        className="px-5 py-2 bg-primary-600 text-white text-sm font-semibold"
-                        style={{ borderRadius: BUTTON_PREVIEW_RADIUS[style] }}
-                      >
-                        Кнопка
-                      </span>
-                      <span className="text-xs font-medium text-gray-700">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Тень у кнопок</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Добавляет мягкую тень к основным кнопкам</p>
-                </div>
-                <Toggle
-                  value={local.buttonShadow}
-                  onChange={v => set('buttonShadow', v)}
-                />
-              </div>
-
-              <LivePreview label="Предпросмотр кнопок">
-                <div className="flex flex-wrap gap-3">
-                  <span
-                    className="px-6 py-2.5 bg-primary-600 text-white text-sm font-semibold cursor-default"
-                    style={{
-                      borderRadius: BUTTON_PREVIEW_RADIUS[local.buttonStyle],
-                      boxShadow: local.buttonShadow ? '0 4px 14px 0 rgba(0,0,0,0.2)' : 'none',
-                    }}
-                  >
-                    Основная кнопка
-                  </span>
-                  <span
-                    className="px-6 py-2.5 border-2 border-primary-600 text-primary-700 text-sm font-semibold cursor-default"
-                    style={{ borderRadius: BUTTON_PREVIEW_RADIUS[local.buttonStyle] }}
-                  >
-                    Контурная
-                  </span>
-                </div>
-              </LivePreview>
-            </Section>
-          )}
-
           {/* Save bar */}
           <div className="flex items-center gap-4 pt-2 border-t border-gray-100 flex-wrap">
             <button
@@ -523,18 +550,6 @@ const CARD_STYLE_LABELS: Record<ProductCardStyle, string> = {
   default:  'Стандарт',
   minimal:  'Минимал',
   bordered: 'С рамкой',
-};
-
-const BUTTON_STYLE_LABELS: Record<ButtonStyle, string> = {
-  rounded: 'Скруглённые',
-  square:  'Квадратные',
-  pill:    'Капсула',
-};
-
-const BUTTON_PREVIEW_RADIUS: Record<ButtonStyle, string> = {
-  rounded: '0.75rem',
-  square:  '4px',
-  pill:    '9999px',
 };
 
 const COLUMNS_CLASS: Record<string, string> = {
@@ -589,20 +604,59 @@ const Field: React.FC<FieldProps> = ({ label, placeholder, value, onChange, hint
   </div>
 );
 
-const Toggle: React.FC<{ value: boolean; onChange: (v: boolean) => void }> = ({ value, onChange }) => (
-  <button
-    type="button"
-    onClick={() => onChange(!value)}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-      value ? 'bg-primary-600' : 'bg-gray-300'
-    }`}
-  >
-    <span
-      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-        value ? 'translate-x-6' : 'translate-x-1'
-      }`}
-    />
-  </button>
+interface ImageUrlFieldProps extends FieldProps {
+  uploadLabel: string;
+  uploading: boolean;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  accept: string;
+  onPickFile: (file: File) => void | Promise<void>;
+}
+
+const ImageUrlField: React.FC<ImageUrlFieldProps> = ({
+  label,
+  placeholder,
+  value,
+  onChange,
+  hint,
+  uploadLabel,
+  uploading,
+  inputRef,
+  accept,
+  onPickFile,
+}) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+    <div className="flex flex-col sm:flex-row gap-2">
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 min-w-0 px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+      />
+      <div className="flex shrink-0">
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) void onPickFile(f);
+          }}
+        />
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+          className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {uploading ? 'Загрузка…' : uploadLabel}
+        </button>
+      </div>
+    </div>
+    {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+  </div>
 );
 
 const ThemeCard: React.FC<{
@@ -682,12 +736,6 @@ const LayoutIcon = () => (
 const FooterIcon = () => (
   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 20h16M4 16h16M4 4h16v8H4z" />
-  </svg>
-);
-const ButtonIcon = () => (
-  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
-    <rect x="3" y="8" width="18" height="8" rx="4" strokeWidth={1.5} />
-    <path strokeLinecap="round" strokeWidth={1.5} d="M9 12h6" />
   </svg>
 );
 const SunIcon: React.FC<{ className?: string }> = ({ className }) => (

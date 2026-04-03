@@ -1,11 +1,28 @@
-import type { Product, Order, User, CartItem, SiteSettings, AppearanceSettings } from '../types/index';
+import type {
+  Product,
+  Order,
+  User,
+  SiteSettings,
+  AppearanceSettings,
+  DeliveryZone,
+} from '../types/index';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+/** В dev без VITE_API_URL запросы идут на тот же origin → Vite проксирует на бэкенд (нет проблем CORS localhost vs 127.0.0.1). */
+const envApi = import.meta.env.VITE_API_URL as string | undefined;
+const API_BASE_URL =
+  envApi && envApi.length > 0
+    ? envApi
+    : import.meta.env.DEV
+      ? '/api'
+      : 'http://127.0.0.1:8000/api';
 
 class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  status: number;
+
+  constructor(status: number, message: string) {
     super(message);
     this.name = 'ApiError';
+    this.status = status;
   }
 }
 
@@ -42,10 +59,21 @@ function transformOrder(data: any): Order {
     userId: data.user_id,
     items: data.items,
     totalAmount: data.total_amount,
+    deliveryFee: data.delivery_fee != null ? Number(data.delivery_fee) : undefined,
+    deliveryZoneId: data.delivery_zone_id != null ? data.delivery_zone_id : undefined,
     status: data.status,
     shippingAddress: data.shipping_address,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
+  };
+}
+
+function transformDeliveryZone(data: any): DeliveryZone {
+  return {
+    id: data.id,
+    name: data.name,
+    price: data.price,
+    sortOrder: data.sort_order ?? 0,
   };
 }
 
@@ -113,13 +141,14 @@ export const api = {
       shipping_address: {
         name: string;
         phone: string;
-        email: string;
+        email?: string;
         city: string;
         postal_code?: string;
         address: string;
         comment?: string;
       };
       user_id?: string;
+      delivery_zone_id?: string;
     }): Promise<Order> => {
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
@@ -207,6 +236,58 @@ export const api = {
         body: JSON.stringify(data),
       });
       return handleResponse<AppearanceSettings>(response);
+    },
+    uploadAsset: async (
+      file: File,
+      assetType: 'logo' | 'favicon' | 'banner'
+    ): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('asset_type', assetType);
+      const response = await fetch(`${API_BASE_URL}/appearance/upload-asset`, {
+        method: 'POST',
+        body: formData,
+      });
+      return handleResponse<{ url: string }>(response);
+    },
+  },
+
+  deliveryZones: {
+    getAll: async (): Promise<DeliveryZone[]> => {
+      const response = await fetch(`${API_BASE_URL}/delivery-zones`);
+      const data = await handleResponse<any[]>(response);
+      return data.map(transformDeliveryZone);
+    },
+
+    create: async (payload: { name: string; price: number }): Promise<DeliveryZone> => {
+      const response = await fetch(`${API_BASE_URL}/delivery-zones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: payload.name, price: payload.price }),
+      });
+      const data = await handleResponse<any>(response);
+      return transformDeliveryZone(data);
+    },
+
+    update: async (
+      id: string,
+      payload: { name?: string; price?: number; sort_order?: number }
+    ): Promise<DeliveryZone> => {
+      const response = await fetch(`${API_BASE_URL}/delivery-zones/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await handleResponse<any>(response);
+      return transformDeliveryZone(data);
+    },
+
+    delete: async (id: string): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/delivery-zones/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new ApiError(response.status, error.detail || error.message || 'Request failed');
+      }
     },
   },
 };

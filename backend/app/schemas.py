@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -82,11 +82,12 @@ class User(UserBase):
 class ShippingAddressBase(BaseModel):
     name: str
     phone: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     city: str
     postal_code: Optional[str] = None
     address: str
     comment: Optional[str] = None
+    delivery_zone_name: Optional[str] = None
 
 class ShippingAddress(ShippingAddressBase):
     id: int
@@ -126,6 +127,30 @@ class OrderBase(BaseModel):
 
 class OrderCreate(OrderBase):
     user_id: Optional[str] = None
+    delivery_zone_id: Optional[str] = None
+
+
+class DeliveryZoneBase(BaseModel):
+    name: str
+    price: float = Field(ge=0)
+
+
+class DeliveryZoneCreate(DeliveryZoneBase):
+    sort_order: Optional[int] = None
+
+
+class DeliveryZoneUpdate(BaseModel):
+    name: Optional[str] = None
+    price: Optional[float] = Field(default=None, ge=0)
+    sort_order: Optional[int] = None
+
+
+class DeliveryZone(DeliveryZoneBase):
+    id: str
+    sort_order: int
+
+    class Config:
+        from_attributes = True
 
 class Order(BaseModel):
     id: str
@@ -176,5 +201,3 @@ class AppearanceSettingsData(BaseModel):
     catalogColumns: str = "3"
     productCardStyle: str = "default"
     footerCopyright: str = ""
-    buttonStyle: str = "rounded"
-    buttonShadow: bool = False

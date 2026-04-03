@@ -12,7 +12,7 @@ const Header: React.FC = () => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const navigate = useNavigate();
   const { getItemCount } = useCart();
-  const { user, isAdmin, login, register, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const { settings } = useSiteSettings();
   const { appearance } = useAppearance();
 
@@ -30,22 +30,20 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center space-x-2 group">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
             {appearance.logoUrl ? (
               <img
                 src={appearance.logoUrl}
-                alt={shopName}
-                className="h-10 object-contain group-hover:scale-105 transition-transform"
+                alt=""
+                className="h-10 w-auto max-w-[120px] sm:max-w-none shrink-0 object-contain group-hover:scale-105 transition-transform"
               />
             ) : (
-              <span className="text-4xl group-hover:scale-110 transition-transform">🌸</span>
+              <span className="text-4xl shrink-0 group-hover:scale-110 transition-transform">🌸</span>
             )}
-            {!appearance.logoUrl && (
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-gray-900 font-serif">{shopName}</span>
-                <span className="text-xs text-gray-500 -mt-1">{shopTagline}</span>
-              </div>
-            )}
+            <div className="flex flex-col min-w-0">
+              <span className="text-lg sm:text-2xl font-bold text-gray-900 font-serif truncate">{shopName}</span>
+              <span className="text-xs text-gray-500 -mt-0.5 sm:-mt-1 truncate">{shopTagline}</span>
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">

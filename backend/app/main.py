@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .database import init_db
-from .routes import products, orders, auth, search, settings, appearance
+from .routes import products, orders, auth, search, settings, appearance, delivery
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -15,7 +15,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174").split(",")
+_default_origins = (
+    "http://localhost:5173,http://localhost:5174,"
+    "http://127.0.0.1:5173,http://127.0.0.1:5174"
+)
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", _default_origins).split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +38,7 @@ app.include_router(auth.router)
 app.include_router(search.router)
 app.include_router(settings.router)
 app.include_router(appearance.router)
+app.include_router(delivery.router)
 
 @app.on_event("startup")
 def on_startup():

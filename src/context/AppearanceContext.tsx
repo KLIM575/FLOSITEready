@@ -50,9 +50,15 @@ const DEFAULT_SETTINGS: AppearanceSettings = {
   catalogColumns: '3',
   productCardStyle: 'default',
   footerCopyright: '',
-  buttonStyle: 'rounded',
-  buttonShadow: false,
 };
+
+/** Удаляет поля снятой настройки «кнопки» из старых сохранений. */
+function stripLegacyAppearance<T extends Record<string, unknown>>(obj: T): T {
+  const next = { ...obj };
+  delete next.buttonStyle;
+  delete next.buttonShadow;
+  return next;
+}
 
 const STORAGE_KEY = 'appearance_settings';
 
@@ -79,12 +85,7 @@ function applySettings(settings: AppearanceSettings) {
   // Dark mode
   root.classList.toggle('dark-mode', settings.darkModeEnabled);
 
-  // Button style
-  const body = document.body;
-  body.classList.remove('btn-pill', 'btn-square', 'btn-shadow');
-  if (settings.buttonStyle === 'pill')   body.classList.add('btn-pill');
-  if (settings.buttonStyle === 'square') body.classList.add('btn-square');
-  if (settings.buttonShadow)             body.classList.add('btn-shadow');
+  document.body.classList.remove('btn-pill', 'btn-square', 'btn-shadow');
 
   // Favicon
   if (settings.faviconUrl) {
@@ -102,7 +103,9 @@ export const AppearanceProvider: React.FC<{ children: ReactNode }> = ({ children
   const [appearance, setAppearance] = useState<AppearanceSettings>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
+      return raw
+        ? { ...DEFAULT_SETTINGS, ...stripLegacyAppearance(JSON.parse(raw) as Record<string, unknown>) }
+        : DEFAULT_SETTINGS;
     } catch {
       return DEFAULT_SETTINGS;
     }
@@ -118,7 +121,10 @@ export const AppearanceProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     api.appearance.get()
       .then(data => {
-        const merged = { ...DEFAULT_SETTINGS, ...data };
+        const merged = {
+          ...DEFAULT_SETTINGS,
+          ...stripLegacyAppearance(data as unknown as Record<string, unknown>),
+        };
         setAppearance(merged);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
         applySettings(merged);

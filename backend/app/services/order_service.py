@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List, Optional
 from .. import models, schemas
+from . import delivery_service
 import uuid
 from datetime import datetime
 
@@ -26,16 +27,36 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
                 price = size_price
         
         total_amount += price * item.quantity
+
+    delivery_fee = 0.0
+    delivery_zone_id_val = None
+    delivery_zone_name_val = None
+    if delivery_service.zone_count(db) > 0:
+        if not order.delivery_zone_id:
+            raise ValueError("Укажите район доставки")
+        zone = delivery_service.get_zone(db, order.delivery_zone_id)
+        if not zone:
+            raise ValueError("Неверный район доставки")
+        delivery_fee = float(zone.price)
+        delivery_zone_id_val = zone.id
+        delivery_zone_name_val = zone.name
+
+    total_amount += delivery_fee
     
     order_id = str(uuid.uuid4())
     now = datetime.utcnow()
     
     db.execute(
-        text("INSERT INTO orders (id, user_id, total_amount, status, created_at, updated_at) VALUES (:id, :user_id, :total_amount, :status, :created_at, :updated_at)"),
+        text(
+            "INSERT INTO orders (id, user_id, total_amount, delivery_zone_id, delivery_fee, status, created_at, updated_at) "
+            "VALUES (:id, :user_id, :total_amount, :delivery_zone_id, :delivery_fee, :status, :created_at, :updated_at)"
+        ),
         {
             "id": order_id,
             "user_id": order.user_id,
             "total_amount": total_amount,
+            "delivery_zone_id": delivery_zone_id_val,
+            "delivery_fee": delivery_fee,
             "status": "pending",
             "created_at": now,
             "updated_at": now
@@ -79,16 +100,20 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
         })
     
     result = db.execute(
-        text("INSERT INTO shipping_addresses (order_id, name, phone, email, city, postal_code, address, comment) VALUES (:order_id, :name, :phone, :email, :city, :postal_code, :address, :comment) RETURNING id"),
+        text(
+            "INSERT INTO shipping_addresses (order_id, name, phone, email, city, postal_code, address, comment, delivery_zone_name) "
+            "VALUES (:order_id, :name, :phone, :email, :city, :postal_code, :address, :comment, :delivery_zone_name) RETURNING id"
+        ),
         {
             "order_id": order_id,
             "name": order.shipping_address.name,
             "phone": order.shipping_address.phone,
-            "email": order.shipping_address.email,
+            "email": order.shipping_address.email or "",
             "city": order.shipping_address.city,
             "postal_code": order.shipping_address.postal_code,
             "address": order.shipping_address.address,
-            "comment": order.shipping_address.comment
+            "comment": order.shipping_address.comment,
+            "delivery_zone_name": delivery_zone_name_val,
         }
     )
     shipping_id = result.fetchone()[0]
@@ -99,7 +124,9 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
         "id": order_id,
         "user_id": order.user_id,
         "total_amount": total_amount,
-            "status": "pending",
+        "delivery_zone_id": delivery_zone_id_val,
+        "delivery_fee": delivery_fee,
+        "status": "pending",
         "created_at": now.isoformat(),
         "updated_at": now.isoformat(),
         "items": items_data,
@@ -108,11 +135,12 @@ def create_order(db: Session, order: schemas.OrderCreate) -> dict:
             "order_id": order_id,
             "name": order.shipping_address.name,
             "phone": order.shipping_address.phone,
-            "email": order.shipping_address.email,
+            "email": order.shipping_address.email or "",
             "city": order.shipping_address.city,
             "postal_code": order.shipping_address.postal_code,
             "address": order.shipping_address.address,
-            "comment": order.shipping_address.comment
+            "comment": order.shipping_address.comment,
+            "delivery_zone_name": delivery_zone_name_val,
         }
     }
 
@@ -141,10 +169,15 @@ def _serialize_order_dict(db: Session, db_order: models.Order) -> dict:
             "price": item.price
         })
     
+    delivery_fee = getattr(db_order, "delivery_fee", 0) or 0
+    delivery_zone_id = getattr(db_order, "delivery_zone_id", None)
+
     return {
         "id": db_order.id,
         "user_id": db_order.user_id,
         "total_amount": db_order.total_amount,
+        "delivery_zone_id": delivery_zone_id,
+        "delivery_fee": delivery_fee,
         "status": db_order.status,
         "created_at": db_order.created_at.isoformat(),
         "updated_at": db_order.updated_at.isoformat(),
@@ -158,7 +191,8 @@ def _serialize_order_dict(db: Session, db_order: models.Order) -> dict:
             "city": shipping.city,
             "postal_code": shipping.postal_code,
             "address": shipping.address,
-            "comment": shipping.comment
+            "comment": shipping.comment,
+            "delivery_zone_name": getattr(shipping, "delivery_zone_name", None),
         } if shipping else None
     }
 

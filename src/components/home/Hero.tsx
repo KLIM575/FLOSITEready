@@ -15,33 +15,27 @@ const Hero: React.FC = () => {
     : 'Создаём неповторимые букеты для ваших особенных моментов. Свежие цветы, быстрая доставка, индивидуальный подход.';
   const showSecondLine = !(settings.bannerEnabled && settings.bannerTitle);
 
-  const hasBgImage = Boolean(appearance.bannerBgImage);
   const hasBgColor = Boolean(appearance.bannerBgColor);
-  const hasCustomBg = hasBgImage || hasBgColor;
+  /** Картинка справа в баннере; фон страницы / секции ею не заливается */
+  const bannerImageSrc = appearance.bannerBgImage || '/images/hero-flowers.jpg';
+  const hasCustomBg = hasBgColor;
 
   const btnText = appearance.bannerButtonText || 'Смотреть каталог';
   const btnLink = appearance.bannerButtonLink || '/catalog';
 
-  const sectionStyle: React.CSSProperties = hasCustomBg
-    ? {
-        backgroundImage: hasBgImage ? `url(${appearance.bannerBgImage})` : undefined,
-        backgroundColor: hasBgColor ? appearance.bannerBgColor : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
+  const sectionStyle: React.CSSProperties = hasBgColor
+    ? { backgroundColor: appearance.bannerBgColor }
     : {};
 
   return (
     <section
       className={`relative py-20 px-4 overflow-hidden ${
-        hasCustomBg ? '' : 'bg-gradient-to-br from-primary-50 via-white to-elegant-50'
+        hasBgColor ? '' : 'bg-gradient-to-br from-primary-50 via-white to-elegant-50'
       }`}
       style={sectionStyle}
     >
-      {hasCustomBg && (
-        <div className="absolute inset-0 bg-black/30" />
-      )}
-      {!hasCustomBg && (
+      {hasBgColor && <div className="absolute inset-0 bg-black/20" />}
+      {!hasBgColor && (
         <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-5" />
       )}
       <div className="max-w-7xl mx-auto relative z-10">
@@ -84,9 +78,9 @@ const Hero: React.FC = () => {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-elegant-400 rounded-full blur-3xl opacity-20" />
             <img
-              src="/images/hero-flowers.jpg"
+              src={bannerImageSrc}
               alt="Красивый букет цветов"
-              className="relative z-10 w-full h-auto rounded-2xl shadow-2xl"
+              className="relative z-10 w-full h-auto rounded-2xl shadow-2xl object-cover"
               onError={(e) => {
                 e.currentTarget.src = 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=800&h=800&fit=crop';
               }}

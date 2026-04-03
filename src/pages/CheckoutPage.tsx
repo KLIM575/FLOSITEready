@@ -3,14 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import type { DeliveryZone } from '../types/index';
 
 interface ShippingInfo {
   name: string;
   phone: string;
-  email: string;
   address: string;
   city: string;
-  postalCode: string;
   comment?: string;
 }
 
@@ -23,15 +22,16 @@ const CheckoutPage: React.FC = () => {
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     name: '',
     phone: '',
-    email: '',
     address: '',
     city: '',
-    postalCode: '',
     comment: ''
   });
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
+  const [selectedDeliveryZoneId, setSelectedDeliveryZoneId] = useState('');
+  const [zonesLoadError, setZonesLoadError] = useState<string | null>(null);
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -40,16 +40,51 @@ const CheckoutPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const zones = await api.deliveryZones.getAll();
+        if (cancelled) return;
+        setDeliveryZones(zones);
+        setZonesLoadError(null);
+        if (zones.length === 1) {
+          setSelectedDeliveryZoneId(zones[0].id);
+        }
+      } catch {
+        if (!cancelled) setZonesLoadError('Не удалось загрузить районы доставки');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const totalPrice = getTotalPrice();
-  const deliveryFee = totalPrice >= 5000 ? 0 : 500;
+  const hasConfiguredZones = deliveryZones.length > 0;
+  const selectedZone = deliveryZones.find((z) => z.id === selectedDeliveryZoneId);
+  const deliveryFee = hasConfiguredZones
+    ? selectedZone
+      ? selectedZone.price
+      : 0
+    : totalPrice >= 5000
+      ? 0
+      : 500;
   const finalTotal = totalPrice + deliveryFee;
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (hasConfiguredZones && !selectedDeliveryZoneId) {
+      return;
+    }
     setStep('payment');
   };
 
   const handlePaymentComplete = async () => {
+    if (hasConfiguredZones && !selectedDeliveryZoneId) {
+      setSubmitError('Выберите район доставки');
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
     
@@ -63,13 +98,15 @@ const CheckoutPage: React.FC = () => {
         shipping_address: {
           name: shippingInfo.name,
           phone: shippingInfo.phone,
-          email: shippingInfo.email,
+          ...(user?.email ? { email: user.email } : {}),
           city: shippingInfo.city,
-          postal_code: shippingInfo.postalCode,
           address: shippingInfo.address,
           comment: shippingInfo.comment
         },
-        user_id: user?.id
+        user_id: user?.id,
+        ...(hasConfiguredZones && selectedDeliveryZoneId
+          ? { delivery_zone_id: selectedDeliveryZoneId }
+          : {}),
       };
       
       const order = await api.orders.create(orderData);
@@ -124,11 +161,13 @@ const CheckoutPage: React.FC = () => {
             {orderId && (
               <p className="text-sm text-gray-500 mb-2">Номер заказа: {orderId}</p>
             )}
-            <p className="text-xl text-gray-600 mb-2">Спасибо за покупку</p>
-            <p className="text-gray-600 mb-8">
-              Мы отправили подтверждение на {shippingInfo.email}
-            </p>
+            <p className="text-xl text-gray-600 mb-8">Спасибо за покупку</p>
             <div className="bg-primary-50 rounded-lg p-6 mb-8">
+              {selectedZone && (
+                <p className="text-gray-700 mb-2">
+                  <strong>Район доставки:</strong> {selectedZone.name}
+                </p>
+              )}
               <p className="text-gray-700 mb-2">
                 <strong>Адрес доставки:</strong> {shippingInfo.address}, {shippingInfo.city}
               </p>
@@ -209,46 +248,48 @@ const CheckoutPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {zonesLoadError && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
+                      {zonesLoadError}
+                    </div>
+                  )}
+
+                  {hasConfiguredZones && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Район доставки *
+                      </label>
+                      <select
+                        required
+                        value={selectedDeliveryZoneId}
+                        onChange={(e) => setSelectedDeliveryZoneId(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                      >
+                        <option value="">Выберите район</option>
+                        {deliveryZones.map((z) => (
+                          <option key={z.id} value={z.id}>
+                            {z.name} —{' '}
+                            {z.price === 0
+                              ? 'бесплатно'
+                              : `${z.price.toLocaleString('ru-RU')} ₽`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Email *
+                      Город *
                     </label>
                     <input
-                      type="email"
+                      type="text"
                       required
-                      value={shippingInfo.email}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
+                      value={shippingInfo.city}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="example@email.com"
+                      placeholder="Москва"
                     />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Город *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={shippingInfo.city}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="Москва"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Индекс
-                      </label>
-                      <input
-                        type="text"
-                        value={shippingInfo.postalCode}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, postalCode: e.target.value })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="123456"
-                      />
-                    </div>
                   </div>
 
                   <div>
@@ -280,10 +321,16 @@ const CheckoutPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full bg-primary-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    disabled={hasConfiguredZones && !selectedDeliveryZoneId}
+                    className="w-full bg-primary-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     Перейти к оплате
                   </button>
+                  {hasConfiguredZones && !selectedDeliveryZoneId && (
+                    <p className="text-sm text-center text-amber-700">
+                      Выберите район доставки, чтобы продолжить
+                    </p>
+                  )}
                 </form>
               </div>
             )}
@@ -468,10 +515,12 @@ const CheckoutPage: React.FC = () => {
                 <div className="flex justify-between text-gray-700">
                   <span>Доставка:</span>
                   <span className="font-semibold">
-                    {deliveryFee === 0 ? (
+                    {hasConfiguredZones && !selectedZone ? (
+                      <span className="text-gray-500">—</span>
+                    ) : deliveryFee === 0 ? (
                       <span className="text-green-600">Бесплатно</span>
                     ) : (
-                      `${deliveryFee} ₽`
+                      `${deliveryFee.toLocaleString('ru-RU')} ₽`
                     )}
                   </span>
                 </div>
@@ -481,7 +530,7 @@ const CheckoutPage: React.FC = () => {
                 </div>
               </div>
 
-              {totalPrice < 5000 && (
+              {!hasConfiguredZones && totalPrice < 5000 && (
                 <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
                   Добавьте товаров на {(5000 - totalPrice).toLocaleString('ru-RU')} ₽ для бесплатной доставки
                 </div>
