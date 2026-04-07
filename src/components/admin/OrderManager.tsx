@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import type { Order } from '../../types/index';
 
+type OrderStatus = Order['status'];
+
 const OrderManager: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ const OrderManager: React.FC = () => {
       await api.orders.updateStatus(orderId, newStatus);
       setOrders(orders.map(order =>
         order.id === orderId
-          ? { ...order, status: newStatus as any }
+          ? { ...order, status: newStatus as OrderStatus }
           : order
       ));
     } catch (err) {

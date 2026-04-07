@@ -150,7 +150,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose }) => {
     setSizes(sizes.filter((_, i) => i !== index));
   };
 
-  const updateSize = (index: number, field: 'size' | 'price', value: any) => {
+  const updateSize = (index: number, field: 'size' | 'price', value: ProductSize | number) => {
     const newSizes = [...sizes];
     newSizes[index] = { ...newSizes[index], [field]: value };
     setSizes(newSizes);
@@ -335,7 +335,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose }) => {
             <div key={index} className="flex gap-4 mb-3">
               <select
                 value={size.size}
-                onChange={(e) => updateSize(index, 'size', e.target.value)}
+                onChange={(e) => updateSize(index, 'size', e.target.value as ProductSize)}
                 className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="S">S</option>

@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////data/flower_shop.db
+      # Добавьте публичный URL сайта при необходимости CORS для отдельного фронта
+      CORS_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+    volumes:
+      - flower_data:/data
+
+volumes:
+  flower_data:

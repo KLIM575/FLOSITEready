@@ -7,16 +7,61 @@ import type {
   DeliveryZone,
   SalesStats,
   VisitsStats,
+  OrderShippingAddress,
 } from '../types/index';
 
-/** В dev без VITE_API_URL запросы идут на тот же origin → Vite проксирует на бэкенд (нет проблем CORS localhost vs 127.0.0.1). */
+/** Тело ответа API для товара (snake_case с бэкенда). */
+interface ProductApi {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  sizes?: Product['sizes'];
+  image: string;
+  images?: string[];
+  category: string;
+  in_stock: boolean;
+}
+
+interface OrderItemApi {
+  id: number;
+  order_id: string;
+  product_id: string;
+  product_name?: string;
+  product_image?: string;
+  quantity: number;
+  size?: string | null;
+  price: number;
+}
+
+interface OrderApi {
+  id: string;
+  user_id?: string | null;
+  items: OrderItemApi[];
+  total_amount: number;
+  delivery_fee?: number | null;
+  delivery_zone_id?: string | null;
+  status: Order['status'];
+  shipping_address?: OrderShippingAddress | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DeliveryZoneApi {
+  id: string;
+  name: string;
+  price: number;
+  sort_order?: number;
+}
+
+/**
+ * Базовый URL API.
+ * - Без VITE_API_URL: относительный `/api` — тот же origin (Vite proxy в dev/preview, nginx/хостинг в production).
+ * - Не используйте 127.0.0.1 по умолчанию в production: у посетителя сайта это его компьютер, не сервер.
+ */
 const envApi = import.meta.env.VITE_API_URL as string | undefined;
 const API_BASE_URL =
-  envApi && envApi.length > 0
-    ? envApi
-    : import.meta.env.DEV
-      ? '/api'
-      : 'http://127.0.0.1:8000/api';
+  envApi && envApi.length > 0 ? envApi.replace(/\/$/, '') : '/api';
 
 class ApiError extends Error {
   status: number;
@@ -41,7 +86,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
-function transformProduct(data: any): Product {
+function transformProduct(data: ProductApi): Product {
   return {
     id: data.id,
     name: data.name,
@@ -55,11 +100,11 @@ function transformProduct(data: any): Product {
   };
 }
 
-function transformOrder(data: any): Order {
+function transformOrder(data: OrderApi): Order {
   return {
     id: data.id,
-    userId: data.user_id,
-    items: data.items,
+    userId: data.user_id ?? undefined,
+    items: data.items as Order['items'],
     totalAmount: data.total_amount,
     deliveryFee: data.delivery_fee != null ? Number(data.delivery_fee) : undefined,
     deliveryZoneId: data.delivery_zone_id != null ? data.delivery_zone_id : undefined,
@@ -70,7 +115,7 @@ function transformOrder(data: any): Order {
   };
 }
 
-function transformDeliveryZone(data: any): DeliveryZone {
+function transformDeliveryZone(data: DeliveryZoneApi): DeliveryZone {
   return {
     id: data.id,
     name: data.name,
@@ -88,13 +133,13 @@ export const api = {
       
       const url = `${API_BASE_URL}/products${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
       const response = await fetch(url);
-      const data = await handleResponse<any[]>(response);
+      const data = await handleResponse<ProductApi[]>(response);
       return data.map(transformProduct);
     },
     
     getById: async (id: string): Promise<Product> => {
       const response = await fetch(`${API_BASE_URL}/products/${id}`);
-      const data = await handleResponse<any>(response);
+      const data = await handleResponse<ProductApi>(response);
       return transformProduct(data);
     },
     
@@ -104,7 +149,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product),
       });
-      const data = await handleResponse<any>(response);
+      const data = await handleResponse<ProductApi>(response);
       return transformProduct(data);
     },
     
@@ -114,7 +159,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product),
       });
-      const data = await handleResponse<any>(response);
+      const data = await handleResponse<ProductApi>(response);
       return transformProduct(data);
     },
     
@@ -157,19 +202,19 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
-      const data = await handleResponse<any>(response);
+      const data = await handleResponse<OrderApi>(response);
       return transformOrder(data);
     },
     
     getByUserId: async (userId: string): Promise<Order[]> => {
       const response = await fetch(`${API_BASE_URL}/orders/user/${userId}`);
-      const data = await handleResponse<any[]>(response);
+      const data = await handleResponse<OrderApi[]>(response);
       return data.map(transformOrder);
     },
     
     getAll: async (): Promise<Order[]> => {
       const response = await fetch(`${API_BASE_URL}/orders`);
-      const data = await handleResponse<any[]>(response);
+      const data = await handleResponse<OrderApi[]>(response);
       return data.map(transformOrder);
     },
     
@@ -179,7 +224,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      const data = await handleResponse<any>(response);
+      const data = await handleResponse<OrderApi>(response);
       return transformOrder(data);
     },
   },
@@ -257,7 +302,7 @@ export const api = {
   deliveryZones: {
     getAll: async (): Promise<DeliveryZone[]> => {
       const response = await fetch(`${API_BASE_URL}/delivery-zones`);
-      const data = await handleResponse<any[]>(response);
+      const data = await handleResponse<DeliveryZoneApi[]>(response);
       return data.map(transformDeliveryZone);
     },
 
@@ -267,7 +312,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: payload.name, price: payload.price }),
       });
-      const data = await handleResponse<any>(response);
+      const data = await handleResponse<DeliveryZoneApi>(response);
       return transformDeliveryZone(data);
     },
 
@@ -280,7 +325,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await handleResponse<any>(response);
+      const data = await handleResponse<DeliveryZoneApi>(response);
       return transformDeliveryZone(data);
     },
 

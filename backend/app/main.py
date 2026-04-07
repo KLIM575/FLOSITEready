@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from .database import init_db
 from .routes import products, orders, auth, search, settings, appearance, delivery, stats
@@ -55,14 +56,51 @@ def on_startup():
     finally:
         db.close()
 
-@app.get("/")
-def root():
-    return {
-        "message": "Flower Shop API",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
 @app.get("/api/health")
 def health_check():
     return {"status": "ok"}
+
+
+_DIST = Path(__file__).resolve().parent.parent.parent / "dist"
+
+
+def _spa_enabled() -> bool:
+    """Раздача Vite-сборки с корня проекта (../dist от backend/app)."""
+    has_index = (_DIST / "index.html").is_file()
+    flag = os.getenv("SERVE_SPA", "").strip().lower()
+    if flag in ("0", "false", "no", "off"):
+        return False
+    if flag in ("1", "true", "yes", "on"):
+        return has_index
+    return has_index
+
+if _spa_enabled():
+    _assets = _DIST / "assets"
+    if _assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(_assets)), name="spa_assets")
+
+    @app.get("/")
+    async def root_spa():
+        return FileResponse(_DIST / "index.html")
+
+    @app.get("/{full_path:path}")
+    async def spa_fallback(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        target = (_DIST / full_path).resolve()
+        dist_root = _DIST.resolve()
+        try:
+            target.relative_to(dist_root)
+        except ValueError:
+            return FileResponse(_DIST / "index.html")
+        if target.is_file():
+            return FileResponse(target)
+        return FileResponse(_DIST / "index.html")
+else:
+    @app.get("/")
+    def root():
+        return {
+            "message": "Flower Shop API",
+            "version": "1.0.0",
+            "docs": "/docs",
+        }

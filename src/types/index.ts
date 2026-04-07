@@ -51,6 +51,18 @@ export interface OrderItem {
   price: number;
 }
 
+/** Адрес доставки в заказе (как приходит с API / отображается в админке). */
+export interface OrderShippingAddress {
+  name?: string;
+  phone?: string;
+  email?: string;
+  city?: string;
+  postal_code?: string;
+  address?: string;
+  comment?: string;
+  delivery_zone_name?: string;
+}
+
 export interface Order {
   id: string;
   userId?: string;
@@ -59,7 +71,7 @@ export interface Order {
   deliveryFee?: number;
   deliveryZoneId?: string | null;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  shippingAddress: any;
+  shippingAddress?: OrderShippingAddress | null;
   createdAt: Date;
   updatedAt: Date;
 }

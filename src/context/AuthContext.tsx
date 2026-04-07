@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import type { User } from '../types/index';
 import { api } from '../services/api';
 
@@ -14,22 +14,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+function readStoredUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return null;
+    return JSON.parse(raw) as User;
+  } catch (err) {
+    console.error('Failed to parse stored user:', err);
+    localStorage.removeItem('user');
+    return null;
+  }
+}
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (err) {
-        console.error('Failed to parse stored user:', err);
-        localStorage.removeItem('user');
-      }
-    }
-    setLoading(false);
-  }, []);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(readStoredUser);
+  const [loading] = useState(false);
 
   const login = async (email: string, password: string) => {
     try {
