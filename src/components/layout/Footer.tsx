@@ -4,6 +4,30 @@ import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAppearance } from '../../context/AppearanceContext';
 import { api } from '../../services/api';
 
+const ensureUrl = (url: string, type?: 'telegram' | 'vk' | 'instagram'): string => {
+  if (!url) return '';
+  
+  // Already a full URL
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  
+  // Remove @ if present
+  const cleanUrl = url.startsWith('@') ? url.slice(1) : url;
+  
+  // Check if it looks like a domain (contains dot) or is just a username
+  const looksLikeUsername = !cleanUrl.includes('.');
+  
+  if (looksLikeUsername) {
+    // Treat as username
+    if (type === 'telegram') return `https://t.me/${cleanUrl}`;
+    if (type === 'vk') return `https://vk.com/${cleanUrl}`;
+    if (type === 'instagram') return `https://instagram.com/${cleanUrl}`;
+    return `https://t.me/${cleanUrl}`;
+  }
+  
+  // Has a dot, treat as domain/path
+  return `https://${cleanUrl}`;
+};
+
 const Footer: React.FC = () => {
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
   const { settings } = useSiteSettings();
@@ -35,7 +59,7 @@ const Footer: React.FC = () => {
             </p>
             <div className="flex space-x-4">
               <a
-                href={settings.socialInstagram || 'https://instagram.com'}
+                href={ensureUrl(settings.socialInstagram, 'instagram') || 'https://instagram.com'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-primary-400 transition-colors"
@@ -47,7 +71,7 @@ const Footer: React.FC = () => {
               </a>
 
               <a
-                href={settings.socialVk || 'https://vk.com'}
+                href={ensureUrl(settings.socialVk, 'vk') || 'https://vk.com'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-primary-400 transition-colors"
@@ -60,7 +84,7 @@ const Footer: React.FC = () => {
 
               {settings.socialTelegram && (
                 <a
-                  href={settings.socialTelegram}
+                  href={ensureUrl(settings.socialTelegram, 'telegram')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-primary-400 transition-colors"
@@ -68,6 +92,20 @@ const Footer: React.FC = () => {
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                  </svg>
+                </a>
+              )}
+
+              {settings.socialMessenger && (
+                <a
+                  href={ensureUrl(settings.socialMessenger)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-primary-400 transition-colors"
+                  aria-label="Наш MAX"
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.5 14.5v-9l7 4.5-7 4.5z"/>
                   </svg>
                 </a>
               )}

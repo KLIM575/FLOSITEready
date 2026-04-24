@@ -170,6 +170,7 @@ export interface SiteSettings {
   socialInstagram: string;
   socialVk: string;
   socialTelegram: string;
+  socialMessenger: string;
   bannerTitle: string;
   bannerSubtitle: string;
   bannerEnabled: boolean;

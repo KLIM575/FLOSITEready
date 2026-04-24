@@ -11,6 +11,7 @@ const defaultSettings: SiteSettings = {
   socialInstagram: '',
   socialVk: '',
   socialTelegram: '',
+  socialMessenger: '',
   bannerTitle: '',
   bannerSubtitle: '',
   bannerEnabled: true,
