@@ -68,6 +68,7 @@ const CartPage: React.FC = () => {
                       <img 
                         src={item.product.image} 
                         alt={item.product.name}
+                        title={item.product.name}
                         className="w-32 h-32 object-cover rounded-lg hover:opacity-80 transition-opacity"
                       />
                     </Link>

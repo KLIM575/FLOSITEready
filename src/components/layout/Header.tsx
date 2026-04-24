@@ -34,7 +34,8 @@ const Header: React.FC = () => {
             {appearance.logoUrl ? (
               <img
                 src={appearance.logoUrl}
-                alt=""
+                alt={shopName}
+                title={shopName}
                 className="h-10 w-auto max-w-[120px] sm:max-w-none shrink-0 object-contain group-hover:scale-105 transition-transform"
                 width={160}
                 height={40}

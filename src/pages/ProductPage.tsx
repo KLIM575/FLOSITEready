@@ -12,6 +12,8 @@ import {
   applyGlobalDocumentSeo,
   removeJsonLd,
   setJsonLd,
+  setCanonicalUrl,
+  setHreflang,
 } from '../utils/seoHead';
 
 function truncateMeta(text: string, max = 160): string {
@@ -69,7 +71,16 @@ const ProductPage: React.FC = () => {
       origin,
     );
 
-    if (loading || !id) return;
+    if (!id) return;
+
+    if (loading) {
+      const preliminaryUrl = origin
+        ? `${origin.replace(/\/$/, '')}/product/${id}`
+        : `/product/${id}`;
+      setCanonicalUrl(preliminaryUrl);
+      setHreflang(preliminaryUrl);
+      return;
+    }
 
     if (error || !product) {
       const canonicalUrl = origin ? `${origin.replace(/\/$/, '')}/catalog` : '/catalog';
@@ -207,6 +218,7 @@ const ProductPage: React.FC = () => {
                 <img 
                   src={images[selectedImageIndex]} 
                   alt={product.name}
+                  title={product.name}
                   className="w-full h-full object-cover"
                   decoding="async"
                   fetchPriority="high"
@@ -230,6 +242,7 @@ const ProductPage: React.FC = () => {
                       <img 
                         src={image} 
                         alt={`${product.name} - фото ${index + 1}`}
+                        title={`${product.name} - фото ${index + 1}`}
                         className="w-full h-full object-cover"
                         loading="lazy"
                         decoding="async"

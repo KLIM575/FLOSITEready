@@ -60,6 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <img 
             src={product.image} 
             alt={product.name}
+            title={product.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             loading={imageLoading}
             decoding="async"

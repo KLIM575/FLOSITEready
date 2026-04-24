@@ -94,6 +94,7 @@ const Hero: React.FC = () => {
               <img
                 src={appearance.bannerBgImage}
                 alt="Красивый букет цветов"
+                title="Красивый букет цветов"
                 className={imgClassName}
                 width={960}
                 height={720}
@@ -112,6 +113,7 @@ const Hero: React.FC = () => {
                   srcSet={HERO_IMAGE_SRCSET_JPG}
                   sizes={HERO_IMAGE_SIZES}
                   alt="Красивый букет цветов"
+                  title="Красивый букет цветов"
                   className={imgClassName}
                   width={960}
                   height={720}

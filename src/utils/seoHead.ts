@@ -10,7 +10,7 @@ function ensureMeta(attr: 'name' | 'property', key: string, content: string): vo
   el.setAttribute('content', content);
 }
 
-function setCanonicalUrl(absoluteUrl: string): void {
+export function setCanonicalUrl(absoluteUrl: string): void {
   let link = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
   if (!link) {
     link = document.createElement('link');
@@ -18,6 +18,20 @@ function setCanonicalUrl(absoluteUrl: string): void {
     document.head.appendChild(link);
   }
   link.href = absoluteUrl;
+}
+
+export function setHreflang(absoluteUrl: string): void {
+  for (const hreflang of ['ru', 'x-default']) {
+    const selector = `link[rel="alternate"][hreflang="${hreflang}"]`;
+    let link = document.head.querySelector(selector) as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'alternate';
+      link.setAttribute('hreflang', hreflang);
+      document.head.appendChild(link);
+    }
+    link.href = absoluteUrl;
+  }
 }
 
 export function removeJsonLd(id: string): void {
@@ -71,4 +85,5 @@ export function applyGlobalDocumentSeo(payload: GlobalSeoPayload): void {
   }
 
   setCanonicalUrl(payload.canonicalUrl);
+  setHreflang(payload.canonicalUrl);
 }

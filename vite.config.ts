@@ -43,6 +43,10 @@ export default defineConfig(({ command }) => ({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
+      '/sitemap.xml': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
     },
   },
   preview: {
@@ -52,6 +56,10 @@ export default defineConfig(({ command }) => ({
         changeOrigin: true,
       },
       '/uploads': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/sitemap.xml': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },

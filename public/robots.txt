@@ -7,4 +7,26 @@ Disallow: /checkout
 Disallow: /cart
 Disallow: /api/
 
-Sitemap: /sitemap.xml
+User-agent: Yandex
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /profile
+Disallow: /checkout
+Disallow: /cart
+Disallow: /api/
+Disallow: /user/
+Crawl-delay: 1
+
+User-agent: YandexBot
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /profile
+Disallow: /checkout
+Disallow: /cart
+Disallow: /api/
+Disallow: /user/
+Crawl-delay: 1
+
+Sitemap: https://yaodinpotfolio.ru/sitemap.xml

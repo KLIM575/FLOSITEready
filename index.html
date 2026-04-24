@@ -4,10 +4,32 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Свежие цветы и букеты с доставкой." />
-    <meta name="keywords" content="цветы, букеты, доставка цветов" />
+
+    <title>Цветочный магазин — доставка свежих цветов и букетов</title>
+
+    <meta name="description" content="Свежие цветы с доставкой по городу. Авторские букеты, розы, тюльпаны, хризантемы и сезонные композиции. Быстрая доставка, индивидуальный подход, выгодные цены." />
+    <meta name="keywords" content="цветы, букеты, доставка цветов, купить цветы, розы, тюльпаны, хризантемы, авторские букеты, цветочный магазин, свежие цветы" />
     <meta name="theme-color" content="#e5446d" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+    <script>
+      (function () {
+        var origin = 'https://yaodinpotfolio.ru';
+        var path = location.pathname.replace(/\/$/, '') || '/';
+        var url = path === '/' ? origin + '/' : origin + path;
+        var c = document.createElement('link');
+        c.rel = 'canonical';
+        c.href = url;
+        document.head.appendChild(c);
+        ['ru', 'x-default'].forEach(function (lang) {
+          var a = document.createElement('link');
+          a.rel = 'alternate';
+          a.setAttribute('hreflang', lang);
+          a.href = url;
+          document.head.appendChild(a);
+        });
+      })();
+    </script>
 
     <!--
       LCP главной страницы: Hero-баннер. Файлы лежат в /public/images/hero/ (same-origin),
@@ -30,12 +52,47 @@
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ru_RU" />
     <meta property="og:site_name" content="Цветочный магазин" />
-    <meta property="og:title" content="Цветочный магазин" />
-    <meta property="og:description" content="Свежие цветы и букеты с доставкой." />
+    <meta property="og:title" content="Цветочный магазин — доставка свежих цветов и букетов" />
+    <meta property="og:description" content="Свежие цветы с доставкой по городу. Авторские букеты, розы, тюльпаны, хризантемы и сезонные композиции. Быстрая доставка, индивидуальный подход, выгодные цены." />
+    <meta property="og:url" content="https://yaodinpotfolio.ru/" />
+    <meta property="og:image" content="https://yaodinpotfolio.ru/images/hero/hero-flowers-960.webp" />
+    <meta property="og:image:width" content="960" />
+    <meta property="og:image:height" content="720" />
+    <meta property="og:image:type" content="image/webp" />
+    <meta property="og:image:alt" content="Красивый букет свежих цветов" />
+
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Цветочный магазин" />
-    <meta name="twitter:description" content="Свежие цветы и букеты с доставкой." />
-    <title>Цветочный магазин</title>
+    <meta name="twitter:title" content="Цветочный магазин — доставка свежих цветов и букетов" />
+    <meta name="twitter:description" content="Свежие цветы с доставкой по городу. Авторские букеты, розы, тюльпаны, хризантемы и сезонные композиции. Быстрая доставка, индивидуальный подход, выгодные цены." />
+    <meta name="twitter:image" content="https://yaodinpotfolio.ru/images/hero/hero-flowers-960.webp" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "Цветочный магазин",
+          "url": "https://yaodinpotfolio.ru/",
+          "description": "Свежие цветы с доставкой по городу. Авторские букеты, розы, тюльпаны, хризантемы и сезонные композиции.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://yaodinpotfolio.ru/catalog?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "name": "Цветочный магазин",
+          "url": "https://yaodinpotfolio.ru/",
+          "logo": "https://yaodinpotfolio.ru/favicon.svg"
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
