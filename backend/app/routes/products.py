@@ -4,9 +4,11 @@ from typing import List, Optional
 from .. import schemas, models
 from ..database import get_db
 from ..services import product_service
-import shutil
-import os
-import uuid
+from ..services.image_service import (
+    ALLOWED_IMAGE_EXTENSIONS,
+    MAX_EDGE_PRODUCT,
+    save_uploaded_image,
+)
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
@@ -119,16 +121,14 @@ async def upload_product_image(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    file_extension = file.filename.split(".")[-1] if file.filename else "jpg"
-    filename = f"{uuid.uuid4()}.{file_extension}"
-    file_path = f"app/uploads/{filename}"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
+    filename = await save_uploaded_image(
+        file=file,
+        output_dir="app/uploads",
+        allowed_extensions=ALLOWED_IMAGE_EXTENSIONS,
+        default_extension="jpg",
+        max_edge=MAX_EDGE_PRODUCT,
+        webp_quality=76,
+    )
     image_url = f"/uploads/{filename}"
     
     db_image = models.ProductImage(

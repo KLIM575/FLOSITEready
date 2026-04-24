@@ -36,6 +36,12 @@ const Header: React.FC = () => {
                 src={appearance.logoUrl}
                 alt=""
                 className="h-10 w-auto max-w-[120px] sm:max-w-none shrink-0 object-contain group-hover:scale-105 transition-transform"
+                width={160}
+                height={40}
+                sizes="(max-width: 640px) 100px, 160px"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
               />
             ) : (
               <span className="text-4xl shrink-0 group-hover:scale-110 transition-transform">🌸</span>

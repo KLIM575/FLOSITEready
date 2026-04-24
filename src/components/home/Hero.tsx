@@ -2,6 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAppearance } from '../../context/AppearanceContext';
+import {
+  HERO_IMAGE_SIZES,
+  HERO_IMAGE_SRC,
+  HERO_IMAGE_SRCSET_JPG,
+  HERO_IMAGE_SRCSET_WEBP,
+} from '../../constants';
 
 const Hero: React.FC = () => {
   const { settings } = useSiteSettings();
@@ -16,9 +22,16 @@ const Hero: React.FC = () => {
   const showSecondLine = !(settings.bannerEnabled && settings.bannerTitle);
 
   const hasBgColor = Boolean(appearance.bannerBgColor);
-  /** Картинка справа в баннере; фон страницы / секции ею не заливается */
-  const bannerImageSrc = appearance.bannerBgImage || '/images/hero-flowers.jpg';
+  /**
+   * Для дефолтного баннера используем локальный <picture> с webp+jpg — src/srcset
+   * совпадают с <link rel="preload"> в index.html, поэтому браузер не делает второй запрос.
+   * Для кастомного bannerBgImage из админки формат/размеры заранее не известны,
+   * рендерим обычный <img> без srcset.
+   */
+  const isCustomBanner = Boolean(appearance.bannerBgImage);
   const hasCustomBg = hasBgColor;
+
+  const imgClassName = 'relative z-10 w-full h-auto rounded-2xl shadow-2xl object-cover';
 
   const btnText = appearance.bannerButtonText || 'Смотреть каталог';
   const btnLink = appearance.bannerButtonLink || '/catalog';
@@ -77,14 +90,36 @@ const Hero: React.FC = () => {
           </div>
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-elegant-400 rounded-full blur-3xl opacity-20" />
-            <img
-              src={bannerImageSrc}
-              alt="Красивый букет цветов"
-              className="relative z-10 w-full h-auto rounded-2xl shadow-2xl object-cover"
-              onError={(e) => {
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=800&h=800&fit=crop';
-              }}
-            />
+            {isCustomBanner ? (
+              <img
+                src={appearance.bannerBgImage}
+                alt="Красивый букет цветов"
+                className={imgClassName}
+                width={960}
+                height={720}
+                decoding="async"
+                fetchPriority="high"
+              />
+            ) : (
+              <picture>
+                <source
+                  type="image/webp"
+                  srcSet={HERO_IMAGE_SRCSET_WEBP}
+                  sizes={HERO_IMAGE_SIZES}
+                />
+                <img
+                  src={HERO_IMAGE_SRC}
+                  srcSet={HERO_IMAGE_SRCSET_JPG}
+                  sizes={HERO_IMAGE_SIZES}
+                  alt="Красивый букет цветов"
+                  className={imgClassName}
+                  width={960}
+                  height={720}
+                  decoding="async"
+                  fetchPriority="high"
+                />
+              </picture>
+            )}
           </div>
         </div>
       </div>

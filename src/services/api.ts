@@ -248,13 +248,6 @@ export const api = {
       return handleResponse<User>(response);
     },
   },
-  
-  search: {
-    products: async (query: string): Promise<Product[]> => {
-      const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
-      return handleResponse<Product[]>(response);
-    },
-  },
 
   settings: {
     get: async (): Promise<SiteSettings> => {

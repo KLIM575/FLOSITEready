@@ -1,10 +1,41 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>project</title>
+    <meta name="description" content="Свежие цветы и букеты с доставкой." />
+    <meta name="keywords" content="цветы, букеты, доставка цветов" />
+    <meta name="theme-color" content="#e5446d" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+    <!--
+      LCP главной страницы: Hero-баннер. Файлы лежат в /public/images/hero/ (same-origin),
+      поэтому не нужен preconnect — HTTP/2 мультиплексирует запрос внутри TLS-сессии HTML.
+      imagesrcset/imagesizes ДОЛЖНЫ совпадать с <source type="image/webp"> в Hero.tsx
+      (см. src/constants/index.ts → HERO_IMAGE_SRCSET_WEBP), иначе preload не применится
+      и браузер сделает второй запрос. type="image/webp" критичен: без него Safari/Firefox
+      могут прогреть jpg-вариант, который потом не используется.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      href="/images/hero/hero-flowers-960.webp"
+      imagesrcset="/images/hero/hero-flowers-480.webp 480w, /images/hero/hero-flowers-768.webp 768w, /images/hero/hero-flowers-960.webp 960w, /images/hero/hero-flowers-1280.webp 1280w, /images/hero/hero-flowers-1600.webp 1600w"
+      imagesizes="(max-width: 768px) 100vw, 50vw"
+      fetchpriority="high"
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:site_name" content="Цветочный магазин" />
+    <meta property="og:title" content="Цветочный магазин" />
+    <meta property="og:description" content="Свежие цветы и букеты с доставкой." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Цветочный магазин" />
+    <meta name="twitter:description" content="Свежие цветы и букеты с доставкой." />
+    <title>Цветочный магазин</title>
   </head>
   <body>
     <div id="root"></div>

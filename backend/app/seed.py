@@ -49,7 +49,7 @@ def seed_database():
                 "price": 3500,
                 "category": "Розы",
                 "in_stock": True,
-                "image": "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=800&h=800&fit=crop",
+                "image": "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=640&h=640&fit=crop&auto=format&q=75",
                 "sizes": [
                     {"size": ProductSizeEnum.S, "price": 2500},
                     {"size": ProductSizeEnum.M, "price": 3500},
@@ -57,9 +57,9 @@ def seed_database():
                     {"size": ProductSizeEnum.XL, "price": 6500}
                 ],
                 "images": [
-                    "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=800&h=800&fit=crop",
-                    "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&h=800&fit=crop",
-                    "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=800&h=800&fit=crop"
+                    "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=640&h=640&fit=crop&auto=format&q=75",
+                    "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=640&h=640&fit=crop&auto=format&q=75",
+                    "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=640&h=640&fit=crop&auto=format&q=75"
                 ]
             },
             {
@@ -69,7 +69,7 @@ def seed_database():
                 "price": 2800,
                 "category": "Композиции",
                 "in_stock": True,
-                "image": "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=800&h=800&fit=crop",
+                "image": "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=640&h=640&fit=crop&auto=format&q=75",
                 "sizes": [
                     {"size": ProductSizeEnum.S, "price": 2000},
                     {"size": ProductSizeEnum.M, "price": 2800},
@@ -77,8 +77,8 @@ def seed_database():
                     {"size": ProductSizeEnum.XL, "price": 5200}
                 ],
                 "images": [
-                    "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=800&h=800&fit=crop",
-                    "https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=800&h=800&fit=crop"
+                    "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=640&h=640&fit=crop&auto=format&q=75",
+                    "https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=640&h=640&fit=crop&auto=format&q=75"
                 ]
             },
             {
@@ -88,7 +88,7 @@ def seed_database():
                 "price": 2200,
                 "category": "Тюльпаны",
                 "in_stock": True,
-                "image": "https://images.unsplash.com/photo-1520763185298-1b434c919102?w=800&h=800&fit=crop",
+                "image": "https://images.unsplash.com/photo-1520763185298-1b434c919102?w=640&h=640&fit=crop&auto=format&q=75",
                 "sizes": [
                     {"size": ProductSizeEnum.S, "price": 1500},
                     {"size": ProductSizeEnum.M, "price": 2200},
@@ -96,8 +96,8 @@ def seed_database():
                     {"size": ProductSizeEnum.XL, "price": 4500}
                 ],
                 "images": [
-                    "https://images.unsplash.com/photo-1520763185298-1b434c919102?w=800&h=800&fit=crop",
-                    "https://images.unsplash.com/photo-1584380931214-dbb5b72e7fd0?w=800&h=800&fit=crop"
+                    "https://images.unsplash.com/photo-1520763185298-1b434c919102?w=640&h=640&fit=crop&auto=format&q=75",
+                    "https://images.unsplash.com/photo-1584380931214-dbb5b72e7fd0?w=640&h=640&fit=crop&auto=format&q=75"
                 ]
             },
             {
@@ -107,11 +107,11 @@ def seed_database():
                 "price": 5500,
                 "category": "Орхидеи",
                 "in_stock": True,
-                "image": "https://images.unsplash.com/photo-1615715616181-6b41c74ebc5d?w=800&h=800&fit=crop",
+                "image": "https://images.unsplash.com/photo-1615715616181-6b41c74ebc5d?w=640&h=640&fit=crop&auto=format&q=75",
                 "sizes": [],
                 "images": [
-                    "https://images.unsplash.com/photo-1615715616181-6b41c74ebc5d?w=800&h=800&fit=crop",
-                    "https://images.unsplash.com/photo-1550735424-d2d34d119598?w=800&h=800&fit=crop"
+                    "https://images.unsplash.com/photo-1615715616181-6b41c74ebc5d?w=640&h=640&fit=crop&auto=format&q=75",
+                    "https://images.unsplash.com/photo-1550735424-d2d34d119598?w=640&h=640&fit=crop&auto=format&q=75"
                 ]
             },
             {
@@ -121,7 +121,7 @@ def seed_database():
                 "price": 4200,
                 "category": "Пионы",
                 "in_stock": True,
-                "image": "https://images.unsplash.com/photo-1591886960571-74d43a9d4166?w=800&h=800&fit=crop",
+                "image": "https://images.unsplash.com/photo-1591886960571-74d43a9d4166?w=640&h=640&fit=crop&auto=format&q=75",
                 "sizes": [
                     {"size": ProductSizeEnum.S, "price": 3000},
                     {"size": ProductSizeEnum.M, "price": 4200},
@@ -129,8 +129,8 @@ def seed_database():
                     {"size": ProductSizeEnum.XL, "price": 7500}
                 ],
                 "images": [
-                    "https://images.unsplash.com/photo-1591886960571-74d43a9d4166?w=800&h=800&fit=crop",
-                    "https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=800&h=800&fit=crop"
+                    "https://images.unsplash.com/photo-1591886960571-74d43a9d4166?w=640&h=640&fit=crop&auto=format&q=75",
+                    "https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=640&h=640&fit=crop&auto=format&q=75"
                 ]
             },
             {
@@ -140,14 +140,14 @@ def seed_database():
                 "price": 8900,
                 "category": "Подарочные наборы",
                 "in_stock": True,
-                "image": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=800&fit=crop",
+                "image": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=640&h=640&fit=crop&auto=format&q=75",
                 "sizes": [
                     {"size": ProductSizeEnum.M, "price": 8900},
                     {"size": ProductSizeEnum.L, "price": 12500}
                 ],
                 "images": [
-                    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=800&fit=crop",
-                    "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=800&h=800&fit=crop"
+                    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=640&h=640&fit=crop&auto=format&q=75",
+                    "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=640&h=640&fit=crop&auto=format&q=75"
                 ]
             }
         ]

@@ -50,20 +50,6 @@ export const SiteSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
     fetchSettings();
   }, [fetchSettings]);
 
-  useEffect(() => {
-    if (settings.seoTitle) {
-      document.title = settings.seoTitle;
-    }
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc && settings.seoDescription) {
-      metaDesc.setAttribute('content', settings.seoDescription);
-    }
-    const metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (metaKeywords && settings.seoKeywords) {
-      metaKeywords.setAttribute('content', settings.seoKeywords);
-    }
-  }, [settings.seoTitle, settings.seoDescription, settings.seoKeywords]);
-
   const updateSettings = async (data: SiteSettings) => {
     const updated = await api.settings.update(data);
     setSettings({ ...defaultSettings, ...updated });

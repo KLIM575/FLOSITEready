@@ -116,10 +116,25 @@ def delete_product(db: Session, product_id: str) -> bool:
     db.commit()
     return True
 
-def search_products(db: Session, query: str) -> List[models.Product]:
-    search_term = f"%{query}%"
-    return db.query(models.Product).filter(
-        (models.Product.name.ilike(search_term)) | 
-        (models.Product.description.ilike(search_term)) |
-        (models.Product.category.ilike(search_term))
-    ).all()
+def search_products(db: Session, query: str, limit: int = 50) -> List[models.Product]:
+    # Защита от пустого/слишком короткого запроса — лишние сканы таблицы.
+    q = (query or "").strip()
+    if len(q) < 2:
+        return []
+    search_term = f"%{q}%"
+    # Сортировка: сначала точные/стартовые совпадения по имени, затем всё остальное.
+    name_prefix = f"{q}%"
+    return (
+        db.query(models.Product)
+        .filter(
+            (models.Product.name.ilike(search_term))
+            | (models.Product.description.ilike(search_term))
+            | (models.Product.category.ilike(search_term))
+        )
+        .order_by(
+            models.Product.name.ilike(name_prefix).desc(),
+            models.Product.name.asc(),
+        )
+        .limit(max(1, min(limit, 100)))
+        .all()
+    )

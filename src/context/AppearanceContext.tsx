@@ -157,4 +157,4 @@ export const useAppearance = () => {
   return ctx;
 };
 
-export { COLOR_THEMES, FONT_PAIRS, DEFAULT_SETTINGS as DEFAULT_APPEARANCE };
+export { COLOR_THEMES, FONT_PAIRS };

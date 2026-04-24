@@ -9,7 +9,6 @@ interface AuthContextType {
   register: (email: string, password: string, name: string) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +28,6 @@ function readStoredUser(): User | null {
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(readStoredUser);
-  const [loading] = useState(false);
 
   const login = async (email: string, password: string) => {
     try {
@@ -62,7 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isAuthenticated, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, isAuthenticated, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List
 from .. import schemas
@@ -8,8 +8,12 @@ from ..services import product_service
 router = APIRouter(prefix="/api/search", tags=["search"])
 
 @router.get("", response_model=List[schemas.Product])
-def search_products(q: str, db: Session = Depends(get_db)):
-    products = product_service.search_products(db, q)
+def search_products(
+    q: str,
+    limit: int = Query(default=50, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    products = product_service.search_products(db, q, limit=limit)
     
     result = []
     for product in products:

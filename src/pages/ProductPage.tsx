@@ -1,14 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
+import { useAppearance } from '../context/AppearanceContext';
 import type { Product, ProductSize } from '../types/index';
 import { api } from '../services/api';
 import Loading from '../components/common/Loading';
+import { getSiteOrigin } from '../utils/siteOrigin';
+import { resolveMediaUrl } from '../utils/resolveMediaUrl';
+import {
+  applyGlobalDocumentSeo,
+  removeJsonLd,
+  setJsonLd,
+} from '../utils/seoHead';
+
+function truncateMeta(text: string, max = 160): string {
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max - 1).trimEnd()}…`;
+}
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { settings } = useSiteSettings();
+  const { appearance } = useAppearance();
+  const origin = useMemo(() => getSiteOrigin(), []);
   
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
@@ -25,6 +43,7 @@ const ProductPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
+        setProduct(null);
         const data = await api.products.getById(id);
         setProduct(data);
         
@@ -33,6 +52,7 @@ const ProductPage: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to fetch product:', err);
+        setProduct(null);
         setError('Не удалось загрузить товар');
       } finally {
         setLoading(false);
@@ -41,6 +61,82 @@ const ProductPage: React.FC = () => {
 
     fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    const brand = settings.shopName?.trim() || 'Цветочный магазин';
+    const fallbackOg = resolveMediaUrl(
+      appearance.bannerBgImage || appearance.logoUrl || '/images/hero-flowers.jpg',
+      origin,
+    );
+
+    if (loading || !id) return;
+
+    if (error || !product) {
+      const canonicalUrl = origin ? `${origin.replace(/\/$/, '')}/catalog` : '/catalog';
+      applyGlobalDocumentSeo({
+        title: `Товар не найден — ${brand}`,
+        description: settings.seoDescription?.trim() || settings.shopTagline?.trim() || '',
+        keywords: settings.seoKeywords?.trim() || undefined,
+        canonicalUrl,
+        ogImage: fallbackOg,
+        siteName: brand,
+      });
+      removeJsonLd('jsonld-product');
+      return;
+    }
+
+    const images = (product.images?.length ? product.images : [product.image])
+      .map((u) => resolveMediaUrl(u, origin))
+      .filter(Boolean);
+    const title = `${product.name} — ${brand}`;
+    const description = truncateMeta(product.description);
+    const canonicalUrl = origin
+      ? `${origin.replace(/\/$/, '')}/product/${product.id}`
+      : `/product/${product.id}`;
+
+    applyGlobalDocumentSeo({
+      title,
+      description,
+      keywords: settings.seoKeywords?.trim() || undefined,
+      canonicalUrl,
+      ogImage: images[0] || fallbackOg,
+      siteName: brand,
+    });
+
+    const price = product.price;
+    const availability = product.inStock
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock';
+
+    setJsonLd('jsonld-product', {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.description,
+      image: images,
+      sku: product.id,
+      category: product.category,
+      offers: {
+        '@type': 'Offer',
+        url: canonicalUrl,
+        priceCurrency: 'RUB',
+        price,
+        availability,
+      },
+    });
+
+    return () => {
+      removeJsonLd('jsonld-product');
+    };
+  }, [
+    loading,
+    error,
+    product,
+    id,
+    settings,
+    appearance,
+    origin,
+  ]);
 
   if (loading) {
     return <Loading />;
@@ -112,6 +208,10 @@ const ProductPage: React.FC = () => {
                   src={images[selectedImageIndex]} 
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  decoding="async"
+                  fetchPriority="high"
+                  width={800}
+                  height={800}
                 />
               </div>
               
@@ -131,6 +231,10 @@ const ProductPage: React.FC = () => {
                         src={image} 
                         alt={`${product.name} - фото ${index + 1}`}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        width={200}
+                        height={200}
                       />
                     </button>
                   ))}

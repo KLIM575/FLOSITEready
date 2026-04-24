@@ -1,12 +1,16 @@
 import json
-import shutil
-import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from .. import schemas, models
 from ..database import get_db
+from ..services.image_service import (
+    MAX_EDGE_BANNER,
+    MAX_EDGE_FAVICON,
+    MAX_EDGE_LOGO,
+    save_uploaded_image,
+)
 
 router = APIRouter(prefix="/api/appearance", tags=["appearance"])
 
@@ -63,8 +67,18 @@ async def upload_appearance_asset(
         ext = "png"
     if not _appearance_upload_allowed(file.content_type, ext):
         raise HTTPException(status_code=400, detail="File must be an image")
-    filename = f"appearance-{asset_type}-{uuid.uuid4()}.{ext}"
-    file_path = f"app/uploads/{filename}"
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    max_edge = {
+        "logo": MAX_EDGE_LOGO,
+        "favicon": MAX_EDGE_FAVICON,
+        "banner": MAX_EDGE_BANNER,
+    }[asset_type]
+    filename = await save_uploaded_image(
+        file=file,
+        output_dir="app/uploads",
+        filename_prefix=f"appearance-{asset_type}",
+        allowed_extensions=("png", "jpg", "jpeg", "webp", "svg", "gif", "ico"),
+        default_extension="png",
+        max_edge=max_edge,
+        webp_quality=74 if asset_type == "banner" else 78,
+    )
     return {"url": f"/uploads/{filename}"}

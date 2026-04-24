@@ -22,7 +22,13 @@ const FeaturedProducts: React.FC = () => {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              imageLoading="lazy"
+              fetchPriority="low"
+              imageSizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 25vw"
+            />
           ))}
         </div>
         <div className="text-center mt-12">

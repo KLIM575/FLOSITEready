@@ -1,12 +1,23 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * Каталог: LCP и сеть
+ * - fetchPriority=high только у первой карточки (один «главный» запрос картинки для Lighthouse).
+ * - Первая строка сетки: eager без high — не перетягивают полосу у LCP.
+ * - Остальное: lazy + low + content-visibility; preload href — только первое фото.
+ * - Поиск: debounce; первый заход: скелетон.
+ */
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/catalog/ProductCard';
+import CatalogGridSkeleton from '../components/catalog/CatalogGridSkeleton';
 import { PRODUCT_CATEGORIES } from '../constants';
 import { api } from '../services/api';
-import type { Product } from '../types/index';
-import Loading from '../components/common/Loading';
+import type { Product, ProductCardStyle } from '../types/index';
 import { useAppearance } from '../context/AppearanceContext';
-import type { ProductCardStyle } from '../types/index';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import {
+  setCatalogHeroImagePreload,
+  clearCatalogHeroImagePreload,
+} from '../utils/catalogLcpPreload';
 
 const COLUMNS_GRID: Record<string, string> = {
   '2': 'grid-cols-1 sm:grid-cols-2',
@@ -14,18 +25,38 @@ const COLUMNS_GRID: Record<string, string> = {
   '4': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
 };
 
+const IMAGE_SIZES_BY_COLUMNS: Record<string, string> = {
+  '2': '(max-width: 639px) 100vw, 50vw',
+  '3': '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw',
+  '4': '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw',
+};
+
+function columnCount(catalogColumns: string): number {
+  const n = parseInt(catalogColumns, 10);
+  if (n === 2 || n === 3 || n === 4) return n;
+  return 3;
+}
+
+function firstRowCount(cols: number, total: number): number {
+  return Math.min(total, cols);
+}
+
 const CatalogPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { appearance } = useAppearance();
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    searchParams.get('category') || 'Все'
+    searchParams.get('category') || 'Все',
   );
   const [searchQuery, setSearchQuery] = useState(
-    searchParams.get('search') || ''
+    searchParams.get('search') || '',
   );
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasCompletedInitialFetch = useRef(false);
+
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 280);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -35,44 +66,72 @@ const CatalogPage: React.FC = () => {
   }, [searchQuery, selectedCategory, setSearchParams]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchProducts = async () => {
+      const isFirst = !hasCompletedInitialFetch.current;
       try {
-        setLoading(true);
+        if (isFirst) {
+          setInitialLoading(true);
+        } else {
+          setIsRefreshing(true);
+        }
         setError(null);
+
         const params: { category?: string; search?: string } = {};
-        
         if (selectedCategory !== 'Все') {
           params.category = selectedCategory;
         }
-        
-        if (searchQuery.trim()) {
-          params.search = searchQuery;
+        if (debouncedSearch) {
+          params.search = debouncedSearch;
         }
-        
+
         const data = await api.products.getAll(params);
-        setProducts(data);
+        if (!cancelled) {
+          setProducts(data);
+        }
       } catch (err) {
         console.error('Failed to fetch products:', err);
-        setError('Не удалось загрузить товары. Попробуйте позже.');
+        if (!cancelled) {
+          setError('Не удалось загрузить товары. Попробуйте позже.');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setInitialLoading(false);
+          setIsRefreshing(false);
+          hasCompletedInitialFetch.current = true;
+        }
       }
     };
 
-    const debounceTimer = setTimeout(() => {
-      fetchProducts();
-    }, 300);
+    void fetchProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCategory, debouncedSearch]);
 
-    return () => clearTimeout(debounceTimer);
-  }, [selectedCategory, searchQuery]);
+  useEffect(() => {
+    if (products.length > 0) {
+      setCatalogHeroImagePreload(products[0].image);
+    } else {
+      clearCatalogHeroImagePreload();
+    }
+    return () => {
+      clearCatalogHeroImagePreload();
+    };
+  }, [products]);
 
   const categories = ['Все', ...PRODUCT_CATEGORIES];
 
-  if (loading) {
-    return <Loading />;
-  }
+  const colsKey = appearance.catalogColumns ?? '3';
+  const cols = useMemo(() => columnCount(colsKey), [colsKey]);
+  const imageSizes = IMAGE_SIZES_BY_COLUMNS[colsKey] ?? IMAGE_SIZES_BY_COLUMNS['3'];
+  const eagerCount = useMemo(
+    () => firstRowCount(cols, products.length),
+    [cols, products.length],
+  );
 
-  if (error) {
+  if (error && products.length === 0 && !initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12 px-4">
         <div className="max-w-2xl mx-auto">
@@ -83,6 +142,7 @@ const CatalogPage: React.FC = () => {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Ошибка загрузки</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <button
+              type="button"
               onClick={() => window.location.reload()}
               className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
             >
@@ -102,10 +162,24 @@ const CatalogPage: React.FC = () => {
           <p className="text-xl text-gray-600">Выберите идеальный букет для вашего случая</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 relative">
+          {isRefreshing && (
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden rounded-t-2xl bg-primary-100"
+              aria-hidden
+            >
+              <div className="h-full w-2/5 animate-pulse bg-primary-500" />
+            </div>
+          )}
           <div className="mb-6">
+            <label htmlFor="catalog-search" className="sr-only">
+              Поиск по каталогу
+            </label>
             <input
-              type="text"
+              id="catalog-search"
+              type="search"
+              enterKeyHint="search"
+              autoComplete="off"
               placeholder="Поиск по названию или описанию..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -117,6 +191,7 @@ const CatalogPage: React.FC = () => {
             {categories.map((category) => (
               <button
                 key={category}
+                type="button"
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   selectedCategory === category
@@ -130,15 +205,34 @@ const CatalogPage: React.FC = () => {
           </div>
         </div>
 
-        {products.length > 0 ? (
-          <div className={`grid gap-8 ${COLUMNS_GRID[appearance.catalogColumns] ?? COLUMNS_GRID['3']}`}>
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                cardStyle={appearance.productCardStyle as ProductCardStyle}
-              />
-            ))}
+        {error && !initialLoading && products.length > 0 && (
+          <div
+            className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
+
+        {initialLoading ? (
+          <CatalogGridSkeleton catalogColumns={colsKey} count={Math.max(cols * 3, 8)} />
+        ) : products.length > 0 ? (
+          <div className={`grid gap-8 ${COLUMNS_GRID[colsKey] ?? COLUMNS_GRID['3']}`}>
+            {products.map((product, index) => {
+              const inFirstRow = index < eagerCount;
+              const lcpHero = index === 0;
+              return (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  cardStyle={appearance.productCardStyle as ProductCardStyle}
+                  imageLoading={inFirstRow ? 'eager' : 'lazy'}
+                  fetchPriority={lcpHero ? 'high' : inFirstRow ? 'auto' : 'low'}
+                  imageSizes={imageSizes}
+                  deferPaint={!inFirstRow}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
@@ -152,6 +246,7 @@ const CatalogPage: React.FC = () => {
               Попробуйте изменить параметры поиска или выбрать другую категорию
             </p>
             <button
+              type="button"
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('Все');

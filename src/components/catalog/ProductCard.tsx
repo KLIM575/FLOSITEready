@@ -6,6 +6,13 @@ import { useCart } from '../../context/CartContext';
 interface ProductCardProps {
   product: Product;
   cardStyle?: ProductCardStyle;
+  /** Первые карточки в сетке: eager + fetchPriority high — лучше LCP в каталоге */
+  imageLoading?: 'eager' | 'lazy';
+  fetchPriority?: 'high' | 'low' | 'auto';
+  /** Под фактическую сетку колонок (меньше лишних байт на мобильных) */
+  imageSizes?: string;
+  /** Откладывает отрисовку вне экрана — меньше работы main thread при скролле */
+  deferPaint?: boolean;
 }
 
 const CARD_STYLE_CLASS: Record<ProductCardStyle, string> = {
@@ -14,7 +21,14 @@ const CARD_STYLE_CLASS: Record<ProductCardStyle, string> = {
   bordered: 'shadow-none border-2 border-gray-200 hover:border-primary-300',
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, cardStyle = 'default' }) => {
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  cardStyle = 'default',
+  imageLoading = 'lazy',
+  fetchPriority = 'auto',
+  imageSizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+  deferPaint = false,
+}) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -37,12 +51,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, cardStyle = 'default
       to={`/product/${product.id}`}
       className="group block"
     >
-      <div className={`bg-white rounded-xl overflow-hidden transition-all transform hover:-translate-y-2 h-full flex flex-col ${CARD_STYLE_CLASS[cardStyle]}`}>
+      <div
+        className={`bg-white rounded-xl overflow-hidden transition-all transform hover:-translate-y-2 h-full flex flex-col ${CARD_STYLE_CLASS[cardStyle]}${
+          deferPaint ? ' [content-visibility:auto] [contain-intrinsic-size:320px_420px]' : ''
+        }`}
+      >
         <div className="aspect-square overflow-hidden bg-gray-100 relative">
           <img 
             src={product.image} 
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            loading={imageLoading}
+            decoding="async"
+            width={600}
+            height={600}
+            sizes={imageSizes}
+            {...(fetchPriority !== 'auto' ? { fetchPriority } : {})}
           />
           {!product.inStock && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
