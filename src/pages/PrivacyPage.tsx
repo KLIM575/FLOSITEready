@@ -1,14 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/seo/SEO';
 
 const PrivacyPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-white py-16 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 text-center">
-          Политика конфиденциальности
-        </h1>
-        <p className="text-center text-gray-500 mb-10">Последнее обновление: апрель 2026 г.</p>
+    <>
+      <SEO
+        title="Политика конфиденциальности"
+        description="Политика конфиденциальности цветочного магазина. Информация о сборе, использовании и защите персональных данных пользователей."
+        keywords="политика конфиденциальности, персональные данные, защита данных, cookie"
+        canonicalPath="/privacy"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-white py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 text-center">
+            Политика конфиденциальности
+          </h1>
+          <p className="text-center text-gray-500 mb-10">Последнее обновление: апрель 2026 г.</p>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 space-y-10">
 
@@ -131,6 +139,7 @@ const PrivacyPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

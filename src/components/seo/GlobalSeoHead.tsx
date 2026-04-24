@@ -1,105 +1,71 @@
-import { useEffect, useMemo } from 'react';
-import { useLocation, useMatch } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAppearance } from '../../context/AppearanceContext';
 import { getSiteOrigin } from '../../utils/siteOrigin';
 import { resolveMediaUrl } from '../../utils/resolveMediaUrl';
-import {
-  applyGlobalDocumentSeo,
-  removeJsonLd,
-  setJsonLd,
-} from '../../utils/seoHead';
-
-const ROUTE_LABEL: Record<string, string> = {
-  '/catalog': 'Каталог',
-  '/cart': 'Корзина',
-  '/checkout': 'Оформление заказа',
-  '/profile': 'Профиль',
-  '/about': 'О нас',
-  '/contacts': 'Контакты',
-  '/admin': 'Админ',
-};
-
-function buildTitle(pathname: string, brand: string, seoTitle: string): string {
-  if (pathname === '/' && seoTitle) return seoTitle;
-  const extra = ROUTE_LABEL[pathname];
-  if (extra) return `${extra} — ${brand}`;
-  if (seoTitle) return seoTitle;
-  return brand;
-}
 
 export default function GlobalSeoHead() {
   const { pathname } = useLocation();
-  const isProduct = Boolean(useMatch('/catalog/:slug'));
   const { settings } = useSiteSettings();
   const { appearance } = useAppearance();
   const origin = useMemo(() => getSiteOrigin(), []);
 
-  useEffect(() => {
-    if (isProduct) return;
+  const siteName = settings.shopName?.trim() || 'Цветочный магазин';
+  const siteDescription =
+    settings.seoDescription?.trim() ||
+    settings.shopTagline?.trim() ||
+    'Свежие цветы и букеты с доставкой.';
 
-    const brand = settings.shopName?.trim() || 'Цветочный магазин';
-    const seoTitle = settings.seoTitle?.trim() || '';
-    const title = buildTitle(pathname, brand, seoTitle);
-    const description =
-      settings.seoDescription?.trim() ||
-      settings.shopTagline?.trim() ||
-      'Свежие цветы и букеты с доставкой.';
-    const keywords = settings.seoKeywords?.trim();
+  const canonicalUrl = origin
+    ? `${origin.replace(/\/$/, '')}${pathname === '/' ? '/' : pathname}`
+    : undefined;
 
-    const canonicalUrl = origin
-      ? `${origin.replace(/\/$/, '')}${pathname === '/' ? '/' : pathname}`
-      : pathname;
+  const ogImage = resolveMediaUrl(
+    appearance.bannerBgImage || appearance.logoUrl || '/images/hero-flowers.jpg',
+    origin
+  );
 
-    let ogImage = '';
-    for (const u of [appearance.bannerBgImage, appearance.logoUrl, '/images/hero-flowers.jpg']) {
-      const r = resolveMediaUrl(u, origin);
-      if (r) {
-        ogImage = r;
-        break;
-      }
-    }
-
-    applyGlobalDocumentSeo({
-      title,
-      description,
-      keywords: keywords || undefined,
-      canonicalUrl,
-      ogImage,
-      siteName: brand,
-    });
-
-    if (pathname === '/') {
-      const logoUrl = resolveMediaUrl(appearance.logoUrl, origin);
-      setJsonLd('jsonld-site', {
-        '@context': 'https://schema.org',
-        '@graph': [
-          {
-            '@type': 'WebSite',
-            name: brand,
-            url: origin || undefined,
-            description,
-            potentialAction: {
-              '@type': 'SearchAction',
-              target: {
-                '@type': 'EntryPoint',
-                urlTemplate: `${origin}/catalog?search={search_term_string}`,
-              },
-              'query-input': 'required name=search_term_string',
-            },
-          },
-          {
-            '@type': 'Organization',
-            name: brand,
-            url: origin || undefined,
-            ...(logoUrl ? { logo: logoUrl } : {}),
-          },
-        ],
-      });
-    } else {
-      removeJsonLd('jsonld-site');
-    }
-  }, [isProduct, pathname, settings, appearance, origin]);
-
-  return null;
+  return (
+    <Helmet
+      defaultTitle={siteName}
+      titleTemplate={`%s — ${siteName}`}
+    >
+      <html lang="ru" />
+      <meta charSet="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="theme-color" content="#ec4899" />
+      
+      <meta name="description" content={siteDescription} />
+      {settings.seoKeywords && <meta name="keywords" content={settings.seoKeywords} />}
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+      
+      <meta name="author" content={siteName} />
+      <meta name="format-detection" content="telephone=no" />
+      
+      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+      {canonicalUrl && <link rel="alternate" hrefLang="ru" href={canonicalUrl} />}
+      {canonicalUrl && <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />}
+      
+      <meta property="og:site_name" content={siteName} />
+      <meta property="og:locale" content="ru_RU" />
+      <meta property="og:type" content="website" />
+      {ogImage && <meta property="og:image" content={ogImage} />}
+      {ogImage && <meta property="og:image:width" content="1200" />}
+      {ogImage && <meta property="og:image:height" content="630" />}
+      
+      <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+      <meta name="twitter:site" content={siteName} />
+      {ogImage && <meta name="twitter:image" content={ogImage} />}
+      
+      <meta name="geo.region" content="RU" />
+      <meta name="geo.placename" content="Russia" />
+      
+      <meta name="mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      <meta name="apple-mobile-web-app-title" content={siteName} />
+    </Helmet>
+  );
 }

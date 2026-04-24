@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import SEO from '../components/seo/SEO';
 import type { DeliveryZone } from '../types/index';
 
 interface ShippingInfo {
@@ -127,13 +128,20 @@ const CheckoutPage: React.FC = () => {
 
   if (items.length === 0 && step !== 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-20">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <div className="bg-white rounded-2xl shadow-xl p-12">
-            <svg className="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Корзина пуста</h1>
+      <>
+        <SEO
+          title="Оформление заказа"
+          description="Корзина пуста. Добавьте товары в корзину для оформления заказа."
+          canonicalPath="/checkout"
+          noindex
+        />
+        <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-20">
+          <div className="max-w-2xl mx-auto px-4 text-center">
+            <div className="bg-white rounded-2xl shadow-xl p-12">
+              <svg className="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Корзина пуста</h1>
             <p className="text-gray-600 mb-8">Добавьте товары в корзину, чтобы оформить заказ</p>
             <Link 
               to="/catalog" 
@@ -144,20 +152,27 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-20">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-12 h-12 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Заказ оформлен!</h1>
+      <>
+        <SEO
+          title="Заказ оформлен"
+          description="Спасибо за покупку! Ваш заказ успешно оформлен."
+          noindex
+        />
+        <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-20">
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-12 h-12 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Заказ оформлен!</h1>
             {orderId && (
               <p className="text-sm text-gray-500 mb-2">Номер заказа: {orderId}</p>
             )}
@@ -181,15 +196,23 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">
-          Оформление заказа
-        </h1>
+    <>
+      <SEO
+        title="Оформление заказа"
+        description="Оформите заказ на доставку цветов. Быстрая доставка в течение 2-4 часов. Бесплатная доставка от 5000₽."
+        canonicalPath="/checkout"
+        noindex
+      />
+      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">
+            Оформление заказа
+          </h1>
 
         <div className="flex items-center justify-center mb-12">
           <div className="flex items-center">
@@ -540,6 +563,7 @@ const CheckoutPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

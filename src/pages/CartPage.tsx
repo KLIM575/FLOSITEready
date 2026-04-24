@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import SEO from '../components/seo/SEO';
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,9 +13,16 @@ const CartPage: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">Корзина</h1>
+      <>
+        <SEO
+          title="Корзина"
+          description="Ваша корзина пуста. Добавьте товары из каталога, чтобы оформить заказ."
+          canonicalPath="/cart"
+          noindex
+        />
+        <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12 px-4">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">Корзина</h1>
           
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
             <svg className="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,14 +43,22 @@ const CartPage: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Корзина</h1>
+    <>
+      <SEO
+        title="Корзина"
+        description={`В вашей корзине ${items.reduce((sum, item) => sum + item.quantity, 0)} товаров на сумму ${totalPrice.toLocaleString('ru-RU')} ₽. Оформите заказ с бесплатной доставкой от 5000₽.`}
+        canonicalPath="/cart"
+        noindex
+      />
+      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-4xl font-bold text-gray-900">Корзина</h1>
           <button
             onClick={clearCart}
             className="text-red-600 hover:text-red-700 font-medium flex items-center gap-2 transition-colors"
@@ -210,6 +226,7 @@ const CartPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

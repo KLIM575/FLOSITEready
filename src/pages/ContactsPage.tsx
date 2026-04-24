@@ -1,21 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
+import SEO from '../components/seo/SEO';
+import { getSiteOrigin } from '../utils/siteOrigin';
 
 const ContactsPage: React.FC = () => {
   const { settings } = useSiteSettings();
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const origin = useMemo(() => getSiteOrigin(), []);
 
   const phone = settings.contactPhone || '+7 (900) 123-45-67';
-  const email = settings.contactEmail || 'info@flowershop.ru';
+  const emailAddress = settings.contactEmail || 'info@flowershop.ru';
   const address = settings.contactAddress || 'г. Москва, ул. Цветочная, 15';
+  const siteName = settings.shopName?.trim() || 'Цветочный магазин';
+
+  const contactJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: 'Контакты',
+    description: 'Контактная информация цветочного магазина',
+    mainEntity: {
+      '@type': 'LocalBusiness',
+      name: siteName,
+      telephone: phone,
+      email: emailAddress,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: address,
+        addressCountry: 'RU',
+      },
+      openingHoursSpecification: {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        opens: '09:00',
+        closes: '21:00',
+      },
+      url: origin || undefined,
+    },
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white py-16 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-5xl font-bold text-gray-900 mb-8 text-center">
-          Контакты
-        </h1>
+    <>
+      <SEO
+        title="Контакты"
+        description={`Свяжитесь с нами: ${phone}. Адрес: ${address}. Время работы: ежедневно 9:00-21:00. Мы всегда рады помочь вам с выбором букета.`}
+        keywords="контакты, телефон, адрес, цветочный магазин, связаться, заказать букет"
+        canonicalPath="/contacts"
+        jsonLd={contactJsonLd}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-5xl font-bold text-gray-900 mb-8 text-center">
+            Контакты
+          </h1>
         
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -42,8 +79,8 @@ const ContactsPage: React.FC = () => {
                 </svg>
                 <div>
                   <div className="font-semibold text-gray-900">Email</div>
-                  <a href={`mailto:${email}`} className="text-primary-600 hover:text-primary-700">
-                    {email}
+                  <a href={`mailto:${emailAddress}`} className="text-primary-600 hover:text-primary-700">
+                    {emailAddress}
                   </a>
                 </div>
               </div>
@@ -144,6 +181,7 @@ const ContactsPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

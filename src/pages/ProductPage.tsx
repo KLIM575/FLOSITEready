@@ -1,20 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../context/CartContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
-import { useAppearance } from '../context/AppearanceContext';
 import type { Product, ProductSize } from '../types/index';
 import { api } from '../services/api';
 import Loading from '../components/common/Loading';
 import { getSiteOrigin } from '../utils/siteOrigin';
 import { resolveMediaUrl } from '../utils/resolveMediaUrl';
-import {
-  applyGlobalDocumentSeo,
-  removeJsonLd,
-  setJsonLd,
-  setCanonicalUrl,
-  setHreflang,
-} from '../utils/seoHead';
 
 function truncateMeta(text: string, max = 160): string {
   const t = text.replace(/\s+/g, ' ').trim();
@@ -27,7 +20,6 @@ const ProductPage: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { settings } = useSiteSettings();
-  const { appearance } = useAppearance();
   const origin = useMemo(() => getSiteOrigin(), []);
   
   const [product, setProduct] = useState<Product | null>(null);
@@ -64,109 +56,100 @@ const ProductPage: React.FC = () => {
     fetchProduct();
   }, [slug]);
 
-  useEffect(() => {
-    const brand = settings.shopName?.trim() || 'Цветочный магазин';
-    const fallbackOg = resolveMediaUrl(
-      appearance.bannerBgImage || appearance.logoUrl || '/images/hero-flowers.jpg',
-      origin,
-    );
+  const brand = settings.shopName?.trim() || 'Цветочный магазин';
 
-    if (!slug) return;
-
-    if (loading) {
-      const preliminaryUrl = origin
-        ? `${origin.replace(/\/$/, '')}/catalog/${slug}`
-        : `/catalog/${slug}`;
-      setCanonicalUrl(preliminaryUrl);
-      setHreflang(preliminaryUrl);
-      return;
-    }
-
-    if (error || !product) {
-      const canonicalUrl = origin ? `${origin.replace(/\/$/, '')}/catalog` : '/catalog';
-      applyGlobalDocumentSeo({
-        title: `Товар не найден — ${brand}`,
-        description: settings.seoDescription?.trim() || settings.shopTagline?.trim() || '',
-        keywords: settings.seoKeywords?.trim() || undefined,
-        canonicalUrl,
-        ogImage: fallbackOg,
-        siteName: brand,
-      });
-      removeJsonLd('jsonld-product');
-      return;
-    }
-
-    const images = (product.images?.length ? product.images : [product.image])
+  const productImages = useMemo(() => {
+    if (!product) return [];
+    return (product.images?.length ? product.images : [product.image])
       .map((u) => resolveMediaUrl(u, origin))
-      .filter(Boolean);
-    const title = `${product.name} — ${brand}`;
-    const description = truncateMeta(product.description);
-    const productSlug = product.slug || product.id;
-    const canonicalUrl = origin
-      ? `${origin.replace(/\/$/, '')}/catalog/${productSlug}`
-      : `/catalog/${productSlug}`;
+      .filter(Boolean) as string[];
+  }, [product, origin]);
 
-    applyGlobalDocumentSeo({
-      title,
-      description,
-      keywords: settings.seoKeywords?.trim() || undefined,
-      canonicalUrl,
-      ogImage: images[0] || fallbackOg,
-      siteName: brand,
-    });
+  const productSlug = product?.slug || product?.id;
+  const canonicalUrl = productSlug
+    ? `${origin?.replace(/\/$/, '') || ''}/catalog/${productSlug}`
+    : undefined;
 
-    const price = product.price;
-    const availability = product.inStock
-      ? 'https://schema.org/InStock'
-      : 'https://schema.org/OutOfStock';
-
-    setJsonLd('jsonld-product', {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: product.name,
-      description: product.description,
-      image: images,
-      sku: product.id,
-      category: product.category,
-      offers: {
-        '@type': 'Offer',
-        url: canonicalUrl,
-        priceCurrency: 'RUB',
-        price,
-        availability,
+  const productJsonLd = product ? {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: productImages,
+    sku: product.id,
+    category: product.category,
+    brand: {
+      '@type': 'Brand',
+      name: brand,
+    },
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'RUB',
+      price: product.price,
+      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: {
+        '@type': 'Organization',
+        name: brand,
       },
-    });
+    },
+  } : undefined;
 
-    return () => {
-      removeJsonLd('jsonld-product');
-    };
-  }, [
-    loading,
-    error,
-    product,
-    slug,
-    settings,
-    appearance,
-    origin,
-  ]);
+  const breadcrumbJsonLd = product ? {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Главная',
+        item: origin || '/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Каталог',
+        item: `${origin || ''}/catalog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+        item: canonicalUrl,
+      },
+    ],
+  } : undefined;
 
   if (loading) {
-    return <Loading />;
+    return (
+      <>
+        <Helmet>
+          <title>Загрузка... — {brand}</title>
+        </Helmet>
+        <Loading />
+      </>
+    );
   }
 
   if (error || !product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          {error || 'Товар не найден'}
-        </h1>
-        <Link 
-          to="/catalog" 
-          className="inline-block bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
-        >
-          Вернуться в каталог
-        </Link>
-      </div>
+      <>
+        <Helmet>
+          <title>Товар не найден — {brand}</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {error || 'Товар не найден'}
+          </h1>
+          <Link 
+            to="/catalog" 
+            className="inline-block bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+          >
+            Вернуться в каталог
+          </Link>
+        </div>
+      </>
     );
   }
 
@@ -192,7 +175,45 @@ const ProductPage: React.FC = () => {
   const images = product.images || [product.image];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12">
+    <>
+      <Helmet>
+        <title>{product.name} — {brand}</title>
+        <meta name="description" content={truncateMeta(product.description)} />
+        {settings.seoKeywords && <meta name="keywords" content={`${product.name}, ${product.category}, ${settings.seoKeywords}`} />}
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        
+        {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+        {canonicalUrl && <link rel="alternate" hrefLang="ru" href={canonicalUrl} />}
+        {canonicalUrl && <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />}
+        
+        <meta property="og:site_name" content={brand} />
+        <meta property="og:title" content={`${product.name} — ${brand}`} />
+        <meta property="og:description" content={truncateMeta(product.description)} />
+        <meta property="og:type" content="product" />
+        {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+        {productImages[0] && <meta property="og:image" content={productImages[0]} />}
+        <meta property="og:locale" content="ru_RU" />
+        <meta property="product:price:amount" content={String(product.price)} />
+        <meta property="product:price:currency" content="RUB" />
+        <meta property="product:availability" content={product.inStock ? 'in stock' : 'out of stock'} />
+        
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${product.name} — ${brand}`} />
+        <meta name="twitter:description" content={truncateMeta(product.description)} />
+        {productImages[0] && <meta name="twitter:image" content={productImages[0]} />}
+        
+        {productJsonLd && (
+          <script type="application/ld+json">
+            {JSON.stringify(productJsonLd)}
+          </script>
+        )}
+        {breadcrumbJsonLd && (
+          <script type="application/ld+json">
+            {JSON.stringify(breadcrumbJsonLd)}
+          </script>
+        )}
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12">
       <div className="max-w-7xl mx-auto px-4">
         <nav className="mb-8">
           <ol className="flex items-center space-x-2 text-sm">
@@ -429,6 +450,7 @@ const ProductPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

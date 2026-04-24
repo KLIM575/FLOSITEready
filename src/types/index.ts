@@ -140,6 +140,27 @@ export interface AppearanceSettings {
   footerCopyright: string;
 }
 
+export interface FeedSettings {
+  // Магазин
+  shopName: string;
+  companyName: string;
+  currency: string;
+  enableFeed: boolean;
+  // Товары
+  includeOutOfStock: boolean;
+  priceType: 'min' | 'base';
+  excludedProductIds: string[];
+  // Доставка
+  enableDelivery: boolean;
+  deliveryCost: number;
+  deliveryDays: number;
+  orderBefore: number;
+  // UTM
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+}
+
 export interface SiteSettings {
   shopName: string;
   shopTagline: string;

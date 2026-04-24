@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from .database import get_db, init_db
-from .routes import products, orders, auth, search, settings, appearance, delivery, stats, seo
+from .routes import products, orders, auth, search, settings, appearance, delivery, stats, seo, feed
 from .routes.seo import maybe_prerender_for_bot
 import os
 from pathlib import Path
@@ -67,6 +67,7 @@ app.include_router(appearance.router)
 app.include_router(delivery.router)
 app.include_router(stats.router)
 app.include_router(seo.router)
+app.include_router(feed.router)
 
 @app.on_event("startup")
 def on_startup():

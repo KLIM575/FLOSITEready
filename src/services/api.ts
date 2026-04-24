@@ -8,6 +8,7 @@ import type {
   SalesStats,
   VisitsStats,
   OrderShippingAddress,
+  FeedSettings,
 } from '../types/index';
 
 /** Тело ответа API для товара (snake_case с бэкенда). */
@@ -338,6 +339,30 @@ export const api = {
       const response = await fetch(`${API_BASE_URL}/server-time`);
       const data = await handleResponse<{ year: number }>(response);
       return data.year;
+    },
+  },
+
+  feed: {
+    getSettings: async (): Promise<FeedSettings> => {
+      const response = await fetch(`${API_BASE_URL}/feed/settings`);
+      return handleResponse<FeedSettings>(response);
+    },
+
+    updateSettings: async (payload: FeedSettings): Promise<FeedSettings> => {
+      const response = await fetch(`${API_BASE_URL}/feed/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      return handleResponse<FeedSettings>(response);
+    },
+
+    getYml: async (): Promise<string> => {
+      const response = await fetch(`${API_BASE_URL}/feed/yml`);
+      if (!response.ok) {
+        throw new ApiError(response.status, 'Не удалось получить фид');
+      }
+      return response.text();
     },
   },
 

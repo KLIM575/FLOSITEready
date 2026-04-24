@@ -9,6 +9,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/catalog/ProductCard';
 import CatalogGridSkeleton from '../components/catalog/CatalogGridSkeleton';
+import SEO from '../components/seo/SEO';
 import { PRODUCT_CATEGORIES } from '../constants';
 import { api } from '../services/api';
 import type { Product, ProductCardStyle } from '../types/index';
@@ -154,13 +155,47 @@ const CatalogPage: React.FC = () => {
     );
   }
 
+  const catalogJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Каталог цветов',
+    description: 'Широкий выбор свежих цветов и букетов с доставкой. Розы, тюльпаны, пионы и композиции на любой случай.',
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: products.slice(0, 10).map((product, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Product',
+          name: product.name,
+          description: product.description,
+          image: product.image,
+          offers: {
+            '@type': 'Offer',
+            price: product.price,
+            priceCurrency: 'RUB',
+            availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          },
+        },
+      })),
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">Каталог цветов</h1>
-          <p className="text-xl text-gray-600">Выберите идеальный букет для вашего случая</p>
-        </div>
+    <>
+      <SEO
+        title="Каталог цветов"
+        description="Широкий выбор свежих цветов и букетов с доставкой. Розы, тюльпаны, пионы и композиции на любой случай. Бесплатная доставка от 5000₽."
+        keywords="каталог цветов, купить букет, цветы с доставкой, розы, тюльпаны, пионы, свежие цветы"
+        canonicalPath="/catalog"
+        jsonLd={catalogJsonLd}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-elegant-50 to-primary-50 py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8 text-center">
+            <h1 className="text-5xl font-bold text-gray-900 mb-4">Каталог цветов</h1>
+            <p className="text-xl text-gray-600">Выберите идеальный букет для вашего случая</p>
+          </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 relative">
           {isRefreshing && (
@@ -259,6 +294,7 @@ const CatalogPage: React.FC = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
