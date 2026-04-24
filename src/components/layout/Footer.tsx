@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAppearance } from '../../context/AppearanceContext';
+import { api } from '../../services/api';
 
 const Footer: React.FC = () => {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
   const { settings } = useSiteSettings();
+
+  useEffect(() => {
+    api.serverTime.getYear()
+      .then(setCurrentYear)
+      .catch(() => { /* fallback: keep client year */ });
+  }, []);
   const { appearance } = useAppearance();
 
   const shopName = settings.shopName || 'Flower Shop';

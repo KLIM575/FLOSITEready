@@ -47,6 +47,36 @@ def _run_schema_migrations():
             with engine.begin() as conn:
                 if "delivery_zone_name" not in cols:
                     conn.execute(text(f"ALTER TABLE shipping_addresses ADD COLUMN delivery_zone_name {str_sql}"))
+
+        if "products" in insp.get_table_names():
+            cols = {c["name"] for c in insp.get_columns("products")}
+            if "slug" not in cols:
+                with engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE products ADD COLUMN slug {str_sql}"))
+                _backfill_product_slugs()
+    except Exception:
+        pass
+
+
+def _backfill_product_slugs():
+    """Генерирует slug для товаров у которых он ещё не задан."""
+    try:
+        from .services.slug_utils import generate_unique_slug
+        from sqlalchemy import text
+
+        db = SessionLocal()
+        try:
+            rows = db.execute(text("SELECT id, name FROM products WHERE slug IS NULL OR slug = ''")).fetchall()
+            for row in rows:
+                product_id, name = row[0], row[1]
+                slug = generate_unique_slug(db, name, exclude_id=product_id)
+                db.execute(
+                    text("UPDATE products SET slug = :slug WHERE id = :id"),
+                    {"slug": slug, "id": product_id},
+                )
+            db.commit()
+        finally:
+            db.close()
     except Exception:
         pass
 

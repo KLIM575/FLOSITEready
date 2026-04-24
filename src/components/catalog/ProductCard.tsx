@@ -48,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Link 
-      to={`/product/${product.id}`}
+      to={`/catalog/${product.slug || product.id}`}
       className="group block"
     >
       <div

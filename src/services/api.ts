@@ -13,6 +13,7 @@ import type {
 /** Тело ответа API для товара (snake_case с бэкенда). */
 interface ProductApi {
   id: string;
+  slug?: string;
   name: string;
   description: string;
   price: number;
@@ -89,6 +90,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 function transformProduct(data: ProductApi): Product {
   return {
     id: data.id,
+    slug: data.slug,
     name: data.name,
     description: data.description,
     price: data.price,
@@ -328,6 +330,14 @@ export const api = {
         const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
         throw new ApiError(response.status, error.detail || error.message || 'Request failed');
       }
+    },
+  },
+
+  serverTime: {
+    getYear: async (): Promise<number> => {
+      const response = await fetch(`${API_BASE_URL}/server-time`);
+      const data = await handleResponse<{ year: number }>(response);
+      return data.year;
     },
   },
 

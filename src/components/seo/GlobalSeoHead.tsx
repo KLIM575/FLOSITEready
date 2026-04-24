@@ -30,7 +30,7 @@ function buildTitle(pathname: string, brand: string, seoTitle: string): string {
 
 export default function GlobalSeoHead() {
   const { pathname } = useLocation();
-  const isProduct = Boolean(useMatch('/product/:id'));
+  const isProduct = Boolean(useMatch('/catalog/:slug'));
   const { settings } = useSiteSettings();
   const { appearance } = useAppearance();
   const origin = useMemo(() => getSiteOrigin(), []);

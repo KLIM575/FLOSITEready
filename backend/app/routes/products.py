@@ -27,6 +27,7 @@ def get_products(
         product_dict = {
             "id": product.id,
             "name": product.name,
+            "slug": product.slug,
             "description": product.description,
             "price": product.price,
             "category": product.category,
@@ -41,13 +42,14 @@ def get_products(
 
 @router.get("/{product_id}", response_model=schemas.Product)
 def get_product(product_id: str, db: Session = Depends(get_db)):
-    product = product_service.get_product_by_id(db, product_id)
+    product = product_service.get_product_by_slug_or_id(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
     product_dict = {
         "id": product.id,
         "name": product.name,
+        "slug": product.slug,
         "description": product.description,
         "price": product.price,
         "category": product.category,
@@ -69,6 +71,7 @@ def create_product(
     product_dict = {
         "id": db_product.id,
         "name": db_product.name,
+        "slug": db_product.slug,
         "description": db_product.description,
         "price": db_product.price,
         "category": db_product.category,
@@ -93,6 +96,7 @@ def update_product(
     product_dict = {
         "id": db_product.id,
         "name": db_product.name,
+        "slug": db_product.slug,
         "description": db_product.description,
         "price": db_product.price,
         "category": db_product.category,

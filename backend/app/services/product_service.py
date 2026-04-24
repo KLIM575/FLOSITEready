@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from .. import models, schemas
+from .slug_utils import generate_unique_slug
 import uuid
 
 def get_products(
@@ -27,10 +28,23 @@ def get_products(
 def get_product_by_id(db: Session, product_id: str) -> Optional[models.Product]:
     return db.query(models.Product).filter(models.Product.id == product_id).first()
 
+
+def get_product_by_slug(db: Session, slug: str) -> Optional[models.Product]:
+    return db.query(models.Product).filter(models.Product.slug == slug).first()
+
+
+def get_product_by_slug_or_id(db: Session, slug_or_id: str) -> Optional[models.Product]:
+    product = get_product_by_slug(db, slug_or_id)
+    if product is None:
+        product = get_product_by_id(db, slug_or_id)
+    return product
+
 def create_product(db: Session, product: schemas.ProductCreate) -> models.Product:
+    slug = generate_unique_slug(db, product.name)
     db_product = models.Product(
         id=str(uuid.uuid4()),
         name=product.name,
+        slug=slug,
         description=product.description,
         price=product.price,
         category=product.category,
@@ -72,7 +86,11 @@ def update_product(
         return None
     
     update_data = product_update.model_dump(exclude_unset=True)
-    
+
+    update_data.pop('slug', None)
+    if 'name' in update_data and update_data['name'] != db_product.name:
+        update_data['slug'] = generate_unique_slug(db, update_data['name'], exclude_id=product_id)
+
     if 'sizes' in update_data:
         db.query(models.ProductSize).filter(
             models.ProductSize.product_id == product_id

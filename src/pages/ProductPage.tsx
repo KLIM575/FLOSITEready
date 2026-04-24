@@ -23,7 +23,7 @@ function truncateMeta(text: string, max = 160): string {
 }
 
 const ProductPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { settings } = useSiteSettings();
@@ -40,13 +40,13 @@ const ProductPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!id) return;
+      if (!slug) return;
       
       try {
         setLoading(true);
         setError(null);
         setProduct(null);
-        const data = await api.products.getById(id);
+        const data = await api.products.getById(slug);
         setProduct(data);
         
         if (data.sizes && data.sizes.length > 0) {
@@ -62,7 +62,7 @@ const ProductPage: React.FC = () => {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [slug]);
 
   useEffect(() => {
     const brand = settings.shopName?.trim() || 'Цветочный магазин';
@@ -71,12 +71,12 @@ const ProductPage: React.FC = () => {
       origin,
     );
 
-    if (!id) return;
+    if (!slug) return;
 
     if (loading) {
       const preliminaryUrl = origin
-        ? `${origin.replace(/\/$/, '')}/product/${id}`
-        : `/product/${id}`;
+        ? `${origin.replace(/\/$/, '')}/catalog/${slug}`
+        : `/catalog/${slug}`;
       setCanonicalUrl(preliminaryUrl);
       setHreflang(preliminaryUrl);
       return;
@@ -101,9 +101,10 @@ const ProductPage: React.FC = () => {
       .filter(Boolean);
     const title = `${product.name} — ${brand}`;
     const description = truncateMeta(product.description);
+    const productSlug = product.slug || product.id;
     const canonicalUrl = origin
-      ? `${origin.replace(/\/$/, '')}/product/${product.id}`
-      : `/product/${product.id}`;
+      ? `${origin.replace(/\/$/, '')}/catalog/${productSlug}`
+      : `/catalog/${productSlug}`;
 
     applyGlobalDocumentSeo({
       title,
@@ -143,7 +144,7 @@ const ProductPage: React.FC = () => {
     loading,
     error,
     product,
-    id,
+    slug,
     settings,
     appearance,
     origin,

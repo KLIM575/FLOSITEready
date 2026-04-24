@@ -38,6 +38,7 @@ class Product(Base):
     
     id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
+    slug = Column(String, nullable=True, unique=True, index=True)
     description = Column(String, nullable=False)
     price = Column(Float, nullable=False)
     category = Column(String, nullable=False, index=True)

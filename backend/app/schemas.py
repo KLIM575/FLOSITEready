@@ -37,6 +37,7 @@ class ProductBase(BaseModel):
     category: str
     in_stock: bool = True
     image: str
+    slug: Optional[str] = None
 
 class ProductCreate(ProductBase):
     sizes: Optional[List[ProductSizePrice]] = None

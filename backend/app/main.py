@@ -10,6 +10,7 @@ from .routes import products, orders, auth, search, settings, appearance, delive
 from .routes.seo import maybe_prerender_for_bot
 import os
 from pathlib import Path
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -84,6 +85,11 @@ def on_startup():
 @app.get("/api/health")
 def health_check():
     return {"status": "ok"}
+
+
+@app.get("/api/server-time")
+def server_time():
+    return {"year": datetime.now(timezone.utc).year}
 
 
 _DIST = Path(__file__).resolve().parent.parent.parent / "dist"
